@@ -1,0 +1,21 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "project.fullname" . }}-test-connection"
+  labels:
+    {{- include "project.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
+  containers:
+    - name: wget
+      image: busybox:1.37
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      command: ["wget"]
+      args: ["-q", "-O-", "http://{{ include "project.fullname" . }}:{{ .Values.service.port }}{{ .Values.serviceMonitor.path }}"]
+{{- end }}

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(meson setup:*)",
+      "Bash(meson compile:*)",
+      "Bash(meson test:*)",
+      "Bash(meson configure:*)",
+      "Bash(meson introspect:*)",
+      "Bash(ninja:*)",
+      "Bash(pkg-config:*)",
+      "Bash(make:*)",
+
+      "Bash(clang:*)",
+      "Bash(gcc:*)",
+      "Bash(g++:*)",
+      "Bash(clang++:*)",
+      "Bash(clang-format:*)",
+      "Bash(clang-tidy:*)",
+      "Bash(cppcheck:*)",
+      "Bash(glslangValidator:*)",
+
+      "Bash(semgrep:*)",
+      "Bash(gitleaks:*)",
+      "Bash(trivy:*)",
+      "Bash(cosign:*)",
+      "Bash(codespell:*)",
+      "Bash(pre-commit:*)",
+      "Bash(release-please:*)",
+
+      "Bash(nvidia-smi:*)",
+      "Bash(nvcc:*)",
+      "Bash(cuda-gdb:*)",
+      "Bash(nsys:*)",
+      "Bash(ncu:*)",
+      "Bash(rocminfo:*)",
+      "Bash(rocprof:*)",
+      "Bash(hipcc:*)",
+      "Bash(sycl-ls:*)",
+      "Bash(icpx:*)",
+      "Bash(xcrun:*)",
+
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(gh release:*)",
+      "Bash(gh run:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh issue:*)",
+
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(jq:*)",
+      "Bash(find:*)",
+      "Bash(file:*)",
+      "Bash(objdump:*)",
+      "Bash(nm:*)",
+      "Bash(readelf:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard origin/main:*)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(rm -rf .git:*)",
+      "Bash(sudo:*)",
+      "Bash(curl * | sh:*)",
+      "Bash(curl * | bash:*)",
+      "Bash(wget * | sh:*)",
+      "Bash(wget * | bash:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": ".claude/hooks/block-unsafe-bash.sh" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": ".claude/hooks/auto-format-on-edit.sh" },
+          { "type": "command", "command": ".claude/hooks/docs-drift-warn.sh" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start.sh" }] }
+    ],
+    "Stop": [{ "hooks": [{ "type": "command", "command": ".claude/hooks/stop.sh" }] }]
+  }
+}

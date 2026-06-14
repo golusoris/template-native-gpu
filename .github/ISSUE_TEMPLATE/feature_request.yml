@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose an enhancement to PROJECT
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that the project does not support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This may require an ADR (architecture decision).
+        - label: This touches the interop ABI (append-only; needs a minor bump).
+        - label: This adds a new GPU backend or kernel.

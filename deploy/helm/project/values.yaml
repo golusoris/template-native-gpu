@@ -1,0 +1,83 @@
+# Default values for the PROJECT chart. App-agnostic; override per deployment.
+
+# Workload kind: Deployment (long-running) | Job (batch) | StatefulSet (stateful).
+kind: Deployment
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/your-org/myproject
+  tag: "" # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Command / args for your binary.
+command: []
+args: []
+env: []
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# GPU scheduling. Set gpu.enabled=true and pick the vendor; the deployment adds
+# the matching resource limit + node affinity.
+gpu:
+  enabled: false
+  vendor: nvidia # nvidia | amd | intel
+  count: 1
+  # node selector label keys per vendor (override if your cluster differs):
+  #   nvidia -> nvidia.com/gpu, amd -> amd.com/gpu, intel -> gpu.intel.com/i915
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+# Hardened pod/container security context (rootless + read-only FS).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# A writable scratch emptyDir (read-only root FS needs one for temp work).
+scratch:
+  enabled: true
+  sizeLimit: 1Gi
+
+service:
+  enabled: false
+  type: ClusterIP
+  port: 8080
+
+# Prometheus Operator ServiceMonitor (requires the CRD installed).
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Job-only knobs (used when kind=Job).
+job:
+  backoffLimit: 2
+  completions: 1
+  parallelism: 1
+  restartPolicy: Never

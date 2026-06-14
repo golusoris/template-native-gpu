@@ -1,0 +1,45 @@
+# Meson / Ninja build trees
+/build/
+/builddir*/
+**/build/
+subprojects/*/
+!subprojects/*.wrap
+
+# Compiled device code + shader artifacts
+*.spv
+*.air
+*.metallib
+*.fatbin
+*.hsaco
+*.ptx
+*.o
+*.obj
+
+# Native build outputs
+*.so
+*.so.*
+*.a
+*.dylib
+*.dll
+*.exe
+
+# Rust (if a binding crate is added)
+/target/
+**/target/
+
+# Editor / OS
+.cache/
+compile_commands.json
+.DS_Store
+*.swp
+
+# Local agent / planning state (never committed)
+.workingdir/
+.workingdir2/
+.scratch/
+.local-notes/
+
+# Secrets / env
+.env
+*.pem
+*.key

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: project
+description: App-agnostic chart for a PROJECT workload (Deployment | Job | StatefulSet) with GPU node affinity, hardened pod security, and an optional ServiceMonitor.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [gpu, native, ffmpeg, compute]
+maintainers:
+  - name: PROJECT maintainers
+    url: https://github.com/your-org/myproject

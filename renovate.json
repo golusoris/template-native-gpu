@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    "helpers:pinGitHubActionDigests",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "schedule": ["before 6am on weekdays"],
+  "timezone": "Europe/Vienna",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10,
+  "rangeStrategy": "bump",
+  "commitMessagePrefix": "chore(deps):",
+  "branchPrefix": "renovate/",
+  "labels": ["dependencies"],
+  "platformAutomerge": true,
+  "osvVulnerabilityAlerts": true,
+  "minimumReleaseAge": "3 days",
+  "ignorePaths": ["subprojects/**", "build/**", "builddir*/**"],
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions minor+patch+digest bumps; auto-merge — digest-only is mechanical and CI catches drift.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "GitHub Actions (minor + patch)",
+      "automerge": true,
+      "automergeType": "pr",
+      "schedule": ["before 6am on Monday"]
+    },
+    {
+      "description": "Major Action upgrades require human review — breaking changes possible.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "GitHub Actions (major)",
+      "automerge": false
+    },
+    {
+      "description": "Group pre-commit hook rev bumps; auto-merge — mechanical, lint catches drift.",
+      "matchManagers": ["pre-commit"],
+      "groupName": "pre-commit hooks",
+      "automerge": true
+    }
+  ]
+}

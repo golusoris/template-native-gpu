@@ -1,0 +1,27 @@
+/**
+ *  Copyright 2026 The PROJECT Authors
+ *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *
+ *  {{Name}} dispatch_strategy. Env override:
+ *  PROJ_{{NAME}}_DISPATCH=<feature>:graph,<feature>:direct,...
+ */
+#ifndef PROJ_{{NAME}}_DISPATCH_STRATEGY_H_
+#define PROJ_{{NAME}}_DISPATCH_STRATEGY_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+    PROJ_{{NAME}}_DISPATCH_DIRECT = 0,
+    PROJ_{{NAME}}_DISPATCH_GRAPH,
+} Proj{{Name}}DispatchStrategy;
+
+Proj{{Name}}DispatchStrategy proj_{{name}}_select_strategy(const char *feature_name,
+                                                          unsigned frame_w, unsigned frame_h);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* PROJ_{{NAME}}_DISPATCH_STRATEGY_H_ */

@@ -1,0 +1,33 @@
+# CODEOWNERS — GitHub auto-assigns review based on paths here.
+# Order matters: later patterns override earlier ones.
+# TEMPLATE: replace @your-org/maintainers with your team/handle.
+
+# Default: everything needs maintainer review.
+*                                           @your-org/maintainers
+
+# The shared core + interop ABI — breaking changes need explicit sign-off.
+/libproject/include/                        @your-org/maintainers
+/libproject/src/interop.c                   @your-org/maintainers
+
+# GPU backends — tight review loop, numerical-correctness sensitive.
+/examples/full-gpu-matrix/core/src/cuda/    @your-org/maintainers
+/examples/full-gpu-matrix/core/src/sycl/    @your-org/maintainers
+/examples/full-gpu-matrix/core/src/hip/     @your-org/maintainers
+/examples/full-gpu-matrix/core/src/metal/   @your-org/maintainers
+
+# Build system.
+/meson.build                                @your-org/maintainers
+/meson_options.txt                          @your-org/maintainers
+/examples/full-gpu-matrix/core/meson.build  @your-org/maintainers
+
+# FFmpeg patch stack — verbatim wire contract.
+/ffmpeg-patches/                            @your-org/maintainers
+
+# CI / supply chain / security.
+/.github/workflows/                         @your-org/maintainers
+/release-please-config.json                 @your-org/maintainers
+/.release-please-manifest.json              @your-org/maintainers
+/SECURITY.md                                @your-org/maintainers
+
+# AI-agent framework.
+/.claude/                                   @your-org/maintainers

@@ -1,0 +1,13 @@
+feat(project): add vf_project_vulkan (illustrative Vulkan compute filter)
+
+A trivial Vulkan compute filter that runs a per-pixel scale+bias pass in VRAM
+as a pre-encode stage, so the frame never leaves the GPU on its way to a
+hardware encoder. This is the TEMPLATE skeleton: replace the compute with your
+real algorithm and grow the AVOptions / push-constant block accordingly.
+
+When meta=1 the filter links libproject and attaches a PROJECT interop blob
+(AV_FRAME_DATA_SEI_UNREGISTERED, UUID-keyed) so a downstream consumer can read
+the per-frame side data. Requires libproject >= 0.1.0 (pkg-config) when the
+filter is enabled.
+
+ADR: docs/adr/0003-ffmpeg-patch-stack.md

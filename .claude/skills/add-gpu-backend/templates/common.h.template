@@ -1,0 +1,28 @@
+/**
+ *  Copyright 2026 The PROJECT Authors
+ *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *
+ *  {{Name}} backend common surface. Real bodies behind HAVE_{{NAME}};
+ *  -ENOSYS fallbacks in stubs.c.
+ */
+#ifndef PROJ_{{NAME}}_COMMON_H_
+#define PROJ_{{NAME}}_COMMON_H_
+
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct Proj{{Name}}State Proj{{Name}}State;
+
+int proj_{{name}}_available(void);
+int proj_{{name}}_state_init(Proj{{Name}}State **out);
+void proj_{{name}}_state_free(Proj{{Name}}State **state);
+int proj_{{name}}_scale(Proj{{Name}}State *st, float *data, size_t n, float scale);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* PROJ_{{NAME}}_COMMON_H_ */

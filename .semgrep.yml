@@ -1,0 +1,69 @@
+# Custom semantic patterns for PROJECT. Standard rule packs (cert-c, cwe-top-25)
+# are pulled in via `semgrep --config p/cert-c-strict --config p/cwe-top-25` in
+# CI; this file holds project-specific rules.
+#
+# TEMPLATE: the rules below are reusable defaults for a native C/C++ + GPU
+# project. Keep them; add your own domain rules alongside.
+
+rules:
+  - id: no-double-precision-loss-in-reduction
+    pattern-either:
+      - pattern: |
+          float $ACC = 0;
+          ...
+          for (...) { ... $ACC += $X * $X * $X; ... }
+      - pattern: |
+          float $ACC = 0.0f;
+          ...
+          for (...) { ... $ACC += $X * $X * $X; ... }
+    message: >
+      Float accumulator for cubed values causes order-dependent drift between
+      scalar, SIMD, and GPU paths. Use double for outer accumulators in
+      reductions so the CPU reference and the GPU kernel agree bit-for-bit.
+    languages: [c, cpp]
+    severity: ERROR
+
+  - id: no-system-rand
+    pattern-either:
+      - pattern: rand()
+      - pattern: srand($X)
+    message: Use a deterministic, seedable RNG (CERT MSC30-C). Output must be reproducible.
+    languages: [c, cpp]
+    severity: ERROR
+
+  - id: no-strcpy-strcat-sprintf
+    pattern-either:
+      - pattern: strcpy(...)
+      - pattern: strcat(...)
+      - pattern: sprintf(...)
+    message: Use strncpy/strncat/snprintf with an explicit bound. (CERT STR31-C / Power-of-10 Rule 9.)
+    languages: [c, cpp]
+    severity: ERROR
+
+  - id: no-malloc-without-check
+    pattern: |
+      $P = malloc(...);
+      $P->$F = ...;
+    message: Check malloc result before dereferencing. (Power-of-10 Rule 7.)
+    languages: [c]
+    severity: ERROR
+
+  - id: no-tmp-path-hardcoded
+    pattern-either:
+      - pattern: '"/tmp/..."'
+      - pattern: 'fopen("/tmp/...", ...)'
+    message: Use mkstemp(); hardcoded /tmp paths are TOCTOU-prone.
+    languages: [c, cpp]
+    severity: WARNING
+
+  - id: no-skip-hooks-in-scripts
+    pattern-either:
+      - pattern-regex: 'git\s+commit\s+.*--no-verify'
+      - pattern-regex: 'git\s+push\s+.*--no-verify'
+    paths:
+      include:
+        - "**/*.sh"
+        - /.claude/**
+    message: Hooks may not be skipped from scripts. Surface failures, fix root cause.
+    languages: [generic]
+    severity: ERROR

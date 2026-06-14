@@ -1,0 +1,13 @@
+[codespell]
+# Project-wide codespell configuration.
+#
+# Skips: build outputs, generated device-code C arrays, FFmpeg patch files
+# (verbatim, hash-sensitive), CHANGELOG.md (generated from changelog.d/),
+# frozen Accepted ADR bodies, and binary fixtures.
+#
+# Ignore list: real words / GPU-domain acronyms / variable-name fragments that
+# codespell otherwise flags. Extend with your project's vocabulary.
+skip = ./build,./builddir*,./subprojects,*.patch,./CHANGELOG.md,*.spv,*.metallib,*.fatbin,*.hsaco,*.bin,*.yuv,*_ptx.c,*_hsaco.c
+ignore-words-list = hsa,nd,fo,padd,iterm,re-use,re-uses,re-used,re-usable
+quiet-level = 3
+check-hidden = true

@@ -1,0 +1,43 @@
+/**
+ *  Copyright 2026 The PROJECT Authors
+ *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *
+ *  -ENOSYS fallbacks for the {{Name}} surface when built without enable_{{name}}.
+ */
+#ifndef HAVE_{{NAME}}
+
+#include "common.h"
+
+#include <errno.h>
+#include <stddef.h>
+
+int proj_{{name}}_available(void)
+{
+    return 0;
+}
+
+int proj_{{name}}_state_init(Proj{{Name}}State **out)
+{
+    if (out) {
+        *out = NULL;
+    }
+    return -ENOSYS;
+}
+
+void proj_{{name}}_state_free(Proj{{Name}}State **state)
+{
+    if (state) {
+        *state = NULL;
+    }
+}
+
+int proj_{{name}}_scale(Proj{{Name}}State *st, float *data, size_t n, float scale)
+{
+    (void)st;
+    (void)data;
+    (void)n;
+    (void)scale;
+    return -ENOSYS;
+}
+
+#endif /* !HAVE_{{NAME}} */

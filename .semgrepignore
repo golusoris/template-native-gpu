@@ -1,0 +1,25 @@
+# Files excluded from semgrep scans. Paths relative to repo root.
+#
+# Rule of thumb: list directories that ship vendored / generated / upstream code
+# you don't author — findings there would be noise you can't act on.
+
+# Build outputs + scratch.
+build/
+builddir*/
+dist/
+
+# Generated device-code C arrays (bin2c / xxd output) and FFmpeg patch sources.
+**/*_ptx.c
+**/*_hsaco.c
+ffmpeg-patches/files/
+
+# Generated patch artifacts (hash-sensitive, verbatim).
+ffmpeg-patches/*.patch
+
+# Binary / data suffixes.
+*.spv
+*.metallib
+*.fatbin
+*.hsaco
+*.yuv
+*.bin

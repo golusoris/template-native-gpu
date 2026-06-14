@@ -1,0 +1,12 @@
+# Ordered list of PROJECT patches against FFmpeg n8.1.1.
+# Applied in order by ffmpeg-patches/test/build-and-run.sh, and regenerated
+# from files/ by ffmpeg-patches/generate.sh. Apply with `git am --3way` onto a
+# pristine n8.1.1 checkout (see README.md). The stack is cumulative; verify
+# with a full series replay, never per-patch `git apply --check`.
+#
+# Each fork-local patch links libproject (>= 0.1.0, pkg-config) and is gated by
+# `vulkan spirv_library` so it only builds where the Vulkan compute path exists.
+#
+# TEMPLATE: this seed ships a single illustrative filter. Add more patches as
+# new entries below (e.g. 0002-add-vf_project_analyze_vulkan.patch).
+0001-add-vf_project_vulkan.patch

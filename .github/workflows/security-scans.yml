@@ -1,0 +1,100 @@
+# Static + supply-chain security scans: CodeQL (C/C++), semgrep, gitleaks,
+# trivy filesystem, and cargo-deny (only if a Cargo.toml exists). All findings
+# upload to the code-scanning dashboard where supported.
+
+name: security-scans
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "13 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-scans-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codeql:
+    name: CodeQL (C/C++)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config glslang-tools
+      - uses: github/codeql-action/init@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+        with:
+          languages: c-cpp
+          config-file: ./.github/codeql-config.yml
+      - name: Build for CodeQL
+        run: |
+          meson setup build
+          meson compile -C build
+      - uses: github/codeql-action/analyze@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with: { python-version: "3.12" }
+      - run: pip install semgrep
+      - name: Run semgrep (project rules + cert-c + cwe-top-25)
+        run: |
+          semgrep --error --config .semgrep.yml \
+            --config p/cert-c-strict --config p/cwe-top-25 .
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@44c470ffc35caa8b1eb3e8012ca53c2f9bea4eb5 # v2.3.9
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  trivy:
+    name: trivy filesystem
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          format: sarif
+          output: trivy.sarif
+      - uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+        with: { sarif_file: trivy.sarif }
+
+  cargo-deny:
+    name: cargo-deny (if Rust present)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: cargo-deny
+        run: |
+          if ls Cargo.toml */Cargo.toml >/dev/null 2>&1; then
+            cargo install cargo-deny --locked
+            cargo deny check
+          else
+            echo "no Cargo.toml — skipping cargo-deny"
+          fi

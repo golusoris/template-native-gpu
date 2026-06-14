@@ -1,0 +1,35 @@
+/*
+ * project.comp — trivial illustrative compute shader (standalone reference).
+ *
+ * Copyright 2026 The PROJECT Authors. BSD-2-Clause-Patent.
+ *
+ * TEMPLATE: this shader does a trivial per-pixel scale+bias so the GPU path has
+ * a real, compilable kernel. Replace its body with your actual compute. The
+ * push-constant block shows the host<->shader parameter contract pattern; the
+ * in-tree FFmpeg filter (ffmpeg-patches/files/vf_project_vulkan.c) would emit an
+ * equivalent shader inline — keep the two in lockstep when editing.
+ */
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0, r16ui) uniform readonly  uimage2D srcImg;
+layout(binding = 1, r16ui) uniform writeonly uimage2D dstImg;
+
+layout(push_constant, std430) uniform Params {
+    int   width;   //  0  plane width
+    int   height;  //  4  plane height
+    float scale;   //  8  multiply
+    float bias;    // 12  add (normalized 0..1)
+} pc;
+
+void main() {
+    ivec2 gid = ivec2(gl_GlobalInvocationID.xy);
+    if (gid.x >= pc.width || gid.y >= pc.height)
+        return;
+
+    float v = float(imageLoad(srcImg, gid).r) / 65535.0;
+    v = clamp(v * pc.scale + pc.bias, 0.0, 1.0);
+
+    imageStore(dstImg, gid, uvec4(uint(round(v * 65535.0)), 0u, 0u, 0u));
+}

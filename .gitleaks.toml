@@ -1,0 +1,38 @@
+title = "PROJECT gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "PROJECT-specific false positives"
+paths = [
+  '''^subprojects/''',
+  '''^build/''',
+  '''^builddir.*/''',
+  '''^\.git/''',
+  # The fixed, project-owned side-data UUID is not a secret.
+  '''^libproject/src/interop\.c$''',
+  '''^libproject/include/project/interop\.h$''',
+  # Package-manager integrity manifests are SHA-256 hashes, not credentials.
+  '''^Cargo\.lock$''',
+  '''^go\.sum$''',
+]
+
+regexes = [
+  '''0{8,}''',
+  # The template's placeholder side-data UUID.
+  '''00112233-4455-4677-8899-aabbccddeeff''',
+]
+
+stopwords = [
+  "REPLACE_WITH_YOUR",
+  "your-api-key",
+  "example.com",
+  "EXAMPLE",
+]
+
+[[rules]]
+id = "no-cosign-private-key"
+description = "A cosign private key must never enter the repo (we use keyless OIDC)."
+regex = '''-----BEGIN ENCRYPTED COSIGN PRIVATE KEY-----'''
+tags = ["key", "cosign"]

@@ -1,0 +1,73 @@
+# Light-touch pre-commit. The heavy gates (sanitizers, the full security scan)
+# run in CI only. Format/lint hooks here run on changed files for speed.
+#
+# Install once:  pre-commit install
+# Run on demand: pre-commit run --all-files
+
+minimum_pre_commit_version: "3.5.0"
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.patch$|^subprojects/|\.(spv|metallib|fatbin|hsaco|bin|yuv|so|a|dylib|dll)$'
+      - id: end-of-file-fixer
+        exclude: '\.patch$|^subprojects/|\.(spv|metallib|fatbin|hsaco|bin|yuv|so|a|dylib|dll)$'
+      - id: check-merge-conflict
+      - id: check-yaml
+        # Helm templates contain Go template syntax ({{- if ... }}) that is not
+        # valid YAML; mkdocs.yml uses !!python/name: tags the SafeLoader rejects.
+        exclude: '^deploy/helm/.*/templates/|^mkdocs\.yml$'
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+        exclude: '\.patch$|^subprojects/|\.(spv|metallib|fatbin|hsaco|bin|yuv|so|a|dylib|dll)$'
+      - id: detect-private-key
+      # The project pulls upstream code via subprojects/ wraps and
+      # ffmpeg-patches/, never via .gitmodules. A new submodule is almost
+      # certainly a mistake or a supply-chain vector — gate it at commit time.
+      - id: forbid-new-submodules
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v22.1.5
+    hooks:
+      - id: clang-format
+        types_or: [c, c++, cuda]
+        exclude: '^subprojects/|^ffmpeg-patches/files/'
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      - id: shfmt-src
+        args: ["-w", "-i", "2", "-ci"]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies: [tomli]
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.22.1
+    hooks:
+      - id: markdownlint-cli2
+        pass_filenames: true
+        # changelog.d/ + docs/adr/_index_fragments are mechanical fragments,
+        # not standalone documents — they always trip MD041/MD013. Their
+        # rendered output (CHANGELOG.md / the ADR index) is linted instead.
+        exclude: '^subprojects/|^changelog.d/|^docs/adr/_index_fragments/'
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks

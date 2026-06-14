@@ -1,0 +1,13 @@
+.git
+.github
+build
+builddir*
+**/build
+subprojects/*/
+*.so
+*.a
+*.o
+.workingdir*
+.scratch
+docs
+examples/*/build

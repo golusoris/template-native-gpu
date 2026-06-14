@@ -1,0 +1,60 @@
+# Primary CI: build + test the minimal seed and the full-gpu-matrix example
+# across a small OS matrix, plus format/lint gates. No GPU SDK is installed, so
+# every backend resolves to its -ENOSYS stub — the build and the
+# backend-agnostic tests still run green.
+
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: build + test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config glslang-tools
+      - name: Install deps (macOS)
+        if: runner.os == 'macOS'
+        run: brew install meson ninja pkg-config glslang
+      - name: Configure + build (minimal seed)
+        run: |
+          meson setup build
+          meson compile -C build
+      - name: Test (minimal seed)
+        run: meson test -C build --print-errorlogs
+      - name: Configure + build (full-gpu-matrix example, all backends stubbed)
+        run: |
+          meson setup build-gpu examples/full-gpu-matrix/core
+          meson compile -C build-gpu
+      - name: Test (full-gpu-matrix example)
+        run: meson test -C build-gpu --print-errorlogs
+
+  format-lint:
+    name: format + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with: { python-version: "3.12" }
+      - name: pre-commit (all files)
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1

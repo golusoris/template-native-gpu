@@ -1,0 +1,27 @@
+{
+  "name": "PROJECT dev",
+  "build": {
+    "dockerfile": "../docker/dev/ubuntu-24.04.Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "mesonbuild.mesonbuild",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "timonwong.shellcheck",
+        "DavidAnson.vscode-markdownlint"
+      ],
+      "settings": {
+        "C_Cpp.clang_format_style": "file",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "postCreateCommand": "pip install --user pre-commit && pre-commit install || true",
+  "remoteUser": "dev"
+}

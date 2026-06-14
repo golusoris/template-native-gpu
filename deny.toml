@@ -1,0 +1,60 @@
+# cargo-deny configuration — supply-chain policy enforcement for any Rust crate
+# pulled into the workspace (e.g. a cbindgen pilot under bindings/rust/ or a
+# feature crate). Harmless if the project ships no Rust today; the security-scan
+# workflow runs `cargo deny check` only when a Cargo.toml exists.
+#
+# Policy summary:
+#   * Licenses   — allow permissive + the project's BSD-2-Clause-Patent.
+#                  Deny strong copyleft (GPL/AGPL/SSPL).
+#   * Bans       — deny openssl-sys / native-tls (prefer rustls); warn on
+#                  multiple versions.
+#   * Advisories — RustSec database; vulnerabilities deny, yanked/notice warn.
+#   * Sources    — crates.io only; deny unknown registries + unknown git.
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent OR MIT
+
+[graph]
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "aarch64-unknown-linux-gnu" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "aarch64-apple-darwin" },
+]
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+[advisories]
+db-urls = ["https://github.com/rustsec/advisory-db"]
+version = 2
+yanked = "warn"
+
+[licenses]
+version = 2
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BSD-2-Clause-Patent",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.93
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+deny = [
+    { name = "openssl-sys" },
+    { name = "native-tls" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,21 @@
+PROJECT
+Copyright (c) 2026 The PROJECT Authors
+
+This product is licensed under the BSD-2-Clause-Patent license (see LICENSE),
+which includes an express patent grant. A secondary MIT option is available for
+dual-licensed files (see LICENSE-MIT).
+
+================================================================================
+Third-party components
+================================================================================
+
+This template ships no third-party code by default. When you vendor a
+dependency or redistribute a third-party model/asset, record it here and add its
+license text under LICENSES/ (one file per SPDX identifier or per asset), per the
+attribution requirements of that component's license (e.g. Apache-2.0 §4).
+
+Example (delete if unused):
+
+  - <component name> — <SPDX-id> — see LICENSES/<file>.txt
+    Source: <upstream URL>
+    Used in: <path(s)>

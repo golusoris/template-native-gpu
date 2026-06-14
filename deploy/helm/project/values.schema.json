@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "PROJECT chart values",
+  "type": "object",
+  "required": ["kind", "image"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": ["Deployment", "StatefulSet", "Job"]
+    },
+    "replicaCount": { "type": "integer", "minimum": 0 },
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      },
+      "additionalProperties": false
+    },
+    "gpu": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "vendor": { "type": "string", "enum": ["nvidia", "amd", "intel"] },
+        "count": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "resources": { "type": "object" },
+    "podSecurityContext": { "type": "object" },
+    "securityContext": { "type": "object" },
+    "scratch": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "sizeLimit": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "serviceMonitor": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "interval": { "type": "string" },
+        "path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "job": {
+      "type": "object",
+      "properties": {
+        "backoffLimit": { "type": "integer", "minimum": 0 },
+        "completions": { "type": "integer", "minimum": 1 },
+        "parallelism": { "type": "integer", "minimum": 1 },
+        "restartPolicy": { "type": "string", "enum": ["Never", "OnFailure"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

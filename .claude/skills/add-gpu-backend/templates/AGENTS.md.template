@@ -1,0 +1,12 @@
+# {{name}}/ — agent guide
+
+{{Name}} compute backend. Real bodies behind `HAVE_{{NAME}}` in `common.c`; the
+no-{{name}} build links `stubs.c` (every entry returns `-ENOSYS`). Keep the two
+surfaces in exact signature lockstep — the reviewer agents block on drift.
+
+- Device-code pipeline (fill in): `scale_kernel.*` → <compiler> → <blob> →
+  embedded array, wired in `core/meson.build`.
+- Dispatch overrides: `PROJ_{{NAME}}_DISPATCH=<feature>:graph` (see
+  `../gpu_dispatch_parse.h`); the strategy-name array index MUST match the enum.
+- Determinism: match the CPU/SIMD reference bit-for-bit (double accumulators, no
+  fused-multiply-add drift).

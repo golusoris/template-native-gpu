@@ -1,0 +1,43 @@
+site_name: PROJECT
+site_description: Native (C/C++) + GPU + FFmpeg-filter project
+# TEMPLATE: set your repo URL.
+repo_url: https://github.com/your-org/myproject
+edit_uri: edit/main/docs/
+copyright: "Copyright &copy; 2026 The PROJECT Authors — BSD-2-Clause-Patent"
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  palette:
+    - scheme: default
+      toggle: { icon: material/weather-night, name: dark mode }
+    - scheme: slate
+      toggle: { icon: material/weather-sunny, name: light mode }
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.superfences
+  - pymdownx.highlight: { anchor_linenums: true }
+
+nav:
+  - Home: index.md
+  - Principles: principles.md
+  - Architecture: architecture/overview.md
+  - API:
+      - Interop ABI: api/interop-abi.md
+  - Development:
+      - Build & test: development/build.md
+      - ADR workflow: development/adr-workflow.md
+  - ADRs:
+      - Index: adr/README.md
+
+plugins:
+  - search
+
+strict: true

@@ -1,0 +1,34 @@
+# Full GPU-matrix example options. Mirrors the vmafx core meson_options.txt
+# shape: every backend is OFF/auto by default so the scaffold compiles on a
+# stock runner with no GPU SDK installed (each backend's entry points return
+# -ENOSYS via its stubs.c).
+
+option('enable_cuda', type: 'boolean', value: false,
+       description: 'Enable CUDA backend')
+option('enable_nvcc', type: 'boolean', value: true,
+       description: 'Use nvcc (vs clang) to compile CUDA device code')
+
+option('enable_sycl', type: 'boolean', value: false,
+       description: 'Enable SYCL/DPC++ backend (icpx default; AdaptiveCpp/acpp supported)')
+option('sycl_compiler', type: 'string', value: 'icpx',
+       description: 'Path or name of the SYCL compiler (icpx | acpp | syclcc)')
+option('sycl_icpx_aot_targets', type: 'string', value: '',
+       description: 'icpx AOT target micro-architectures (empty => SPIR-V JIT only)')
+option('sycl_acpp_targets', type: 'string', value: 'generic',
+       description: 'AdaptiveCpp --acpp-targets value')
+
+option('enable_hip', type: 'boolean', value: false,
+       description: 'Enable HIP (AMD ROCm) backend')
+option('enable_hipcc', type: 'boolean', value: false,
+       description: 'Compile HIP device kernels to HSACO via hipcc --genco')
+option('hip_gfx_targets', type: 'string', value: '',
+       description: 'Comma-separated GFX targets (empty => auto-detect / multi-target fallback)')
+
+option('enable_metal', type: 'feature', value: 'auto',
+       description: 'Enable Metal (Apple Silicon) backend (auto => on for darwin host)')
+
+option('enable_vulkan', type: 'boolean', value: true,
+       description: 'Compile the Vulkan reference shaders to SPIR-V (needs glslang)')
+
+option('enable_tests', type: 'boolean', value: true,
+       description: 'Build the example test + fuzz harness')

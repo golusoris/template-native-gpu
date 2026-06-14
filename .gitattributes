@@ -1,0 +1,14 @@
+# Normalize line endings; keep generated/binary artifacts out of diffs.
+* text=auto eol=lf
+
+*.patch -text
+*.spv binary
+*.metallib binary
+*.fatbin binary
+*.hsaco binary
+*.air binary
+
+# Generated device-code C arrays — collapse in diffs / reviews.
+*_ptx.c linguist-generated=true
+*_hsaco.c linguist-generated=true
+CHANGELOG.md linguist-generated=true

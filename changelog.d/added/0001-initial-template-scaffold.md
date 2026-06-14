@@ -1,0 +1,1 @@
+- Initial template scaffold: minimal seed (libproject append-only interop ABI + Vulkan reference shader + FFmpeg patch stack) and the full GPU-matrix example (CUDA/HIP/Metal/SYCL/Vulkan dispatch).

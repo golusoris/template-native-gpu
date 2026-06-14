@@ -1,0 +1,10 @@
+PLACEHOLDER — this is a GENERATED artifact.
+
+Run `./generate.sh` (with FFMPEG_REPO pointing at a pristine FFmpeg n8.1.1
+checkout) to produce the real `git format-patch` output here. The committed
+patch must be regenerated whenever `files/vf_project_vulkan.c` changes, and both
+the source and the regenerated patch committed together.
+
+The template ships this placeholder rather than a real patch because the real
+patch's context hunks are tied to a specific FFmpeg base tag that is not vendored
+in this repo. See README.md § "Regenerate".

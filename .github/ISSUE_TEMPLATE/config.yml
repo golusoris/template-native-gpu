@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security disclosure
+    url: https://github.com/your-org/myproject/security/advisories/new
+    about: Report vulnerabilities privately — never in a public issue.
+  - name: Question / discussion
+    url: https://github.com/your-org/myproject/discussions
+    about: For usage questions and design discussion.

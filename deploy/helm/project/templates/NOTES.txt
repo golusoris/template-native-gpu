@@ -1,0 +1,15 @@
+{{ include "project.fullname" . }} ({{ .Values.kind }}) installed.
+
+{{- if .Values.gpu.enabled }}
+GPU scheduling: {{ .Values.gpu.count }}x {{ .Values.gpu.vendor }} requested via
+{{ include "project.gpuResourceKey" . }} with node affinity on that resource.
+{{- else }}
+GPU scheduling: disabled (CPU/host workload). Set gpu.enabled=true to request a GPU.
+{{- end }}
+
+{{- if .Values.service.enabled }}
+Service: {{ include "project.fullname" . }}:{{ .Values.service.port }} ({{ .Values.service.type }})
+{{- end }}
+
+Pod runs rootless, read-only root FS{{ if .Values.scratch.enabled }} with a writable /tmp emptyDir{{ end }}.
+Verify:  kubectl get {{ lower .Values.kind }} {{ include "project.fullname" . }}

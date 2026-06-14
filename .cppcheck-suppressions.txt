@@ -1,0 +1,21 @@
+# Vendored / generated code we don't own.
+*:subprojects/*
+*:build/*
+*:builddir*/*
+
+# Generated device-code C arrays (bin2c / xxd output).
+*:*_ptx.c
+*:*_hsaco.c
+
+# Public C API surface — naturally has functions only called by external linkers.
+unusedFunction:libproject/include/project/*.h
+
+# Per-backend GPU TUs: many entry points are reached only through dispatch /
+# the public ABI, so cppcheck's unusedFunction fires as a false positive.
+unusedFunction:examples/*/core/src/cuda/*
+unusedFunction:examples/*/core/src/sycl/*
+unusedFunction:examples/*/core/src/hip/*
+unusedFunction:examples/*/core/src/metal/*
+
+missingIncludeSystem
+unmatchedSuppression
