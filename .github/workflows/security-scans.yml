@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y meson ninja-build pkg-config glslang-tools
-      - uses: github/codeql-action/init@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+      - uses: github/codeql-action/init@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
         with:
           languages: c-cpp
           config-file: ./.github/codeql-config.yml
@@ -39,7 +39,7 @@ jobs:
         run: |
           meson setup build
           meson compile -C build
-      - uses: github/codeql-action/analyze@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+      - uses: github/codeql-action/analyze@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
 
   semgrep:
     name: semgrep
@@ -47,13 +47,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with: { python-version: "3.12" }
-      - run: pip install semgrep
-      - name: Run semgrep (project rules + cert-c + cwe-top-25)
-        run: |
-          semgrep --error --config .semgrep.yml \
-            --config p/cert-c-strict --config p/cwe-top-25 .
+      - name: Semgrep scan refuses a planted finding
+        run: bash scripts/ci/security-scans_test.sh semgrep
+      - name: Run semgrep (project rules + c + cwe-top-25)
+        run: bash scripts/ci/semgrep-scan.sh
 
   gitleaks:
     name: gitleaks
@@ -62,9 +59,23 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@44c470ffc35caa8b1eb3e8012ca53c2f9bea4eb5 # v2.3.9
-        env:
-          GITLEAKS_CONFIG: .gitleaks.toml
+      # The gitleaks-action wrapper needs a paid licence key for organisation
+      # repositories; the binary is MIT.
+      - name: Installer refuses a wrong digest
+        run: bash scripts/ci/security-scans_test.sh gitleaks-install
+      - name: Install pinned gitleaks
+        run: |
+          set -euo pipefail
+          bash scripts/ci/install-gitleaks.sh "$RUNNER_TEMP/gitleaks-bin"
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+      - name: gitleaks refuses a planted key
+        run: bash scripts/ci/security-scans_test.sh gitleaks-scan
+      - name: gitleaks
+        run: |
+          set -euo pipefail
+          . tools/tool-versions.env
+          test "$(gitleaks version)" = "$GITLEAKS_VERSION"
+          gitleaks git . -c .gitleaks.toml --redact --no-banner --verbose
 
   trivy:
     name: trivy filesystem
@@ -75,13 +86,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
-        with:
-          scan-type: fs
-          scanners: vuln,secret,misconfig
-          format: sarif
-          output: trivy.sarif
-      - uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+      # The wrapper action calls an inner action by tag, which this repository's
+      # SHA-pinning policy refuses.
+      - name: trivy filesystem scan (SARIF)
+        run: bash scripts/ci/trivy-scan.sh trivy.sarif
+      - uses: github/codeql-action/upload-sarif@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
         with: { sarif_file: trivy.sarif }
 
   cargo-deny:

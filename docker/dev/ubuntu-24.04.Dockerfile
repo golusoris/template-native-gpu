@@ -4,7 +4,7 @@
 # GPU lanes.
 #
 # Multi-arch (linux/amd64,linux/arm64) via buildx in docker-publish.yml.
-FROM ubuntu:24.04
+FROM ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -25,6 +25,8 @@ WORKDIR /workspace
 
 # pip --user installs land here.
 ENV PATH="/home/${USER}/.local/bin:${PATH}"
-RUN python3 -m pip install --user --break-system-packages pre-commit semgrep
+COPY --chown=${USER}:${USER} docker/dev/requirements.txt /tmp/requirements.txt
+RUN python3 -m pip install --user --break-system-packages --require-hashes \
+        -r /tmp/requirements.txt
 
 CMD ["bash"]

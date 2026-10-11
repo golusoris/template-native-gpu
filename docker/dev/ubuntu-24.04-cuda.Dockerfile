@@ -4,7 +4,7 @@
 # running the kernels needs an NVIDIA GPU + driver at runtime.
 #
 # TEMPLATE: pin the CUDA tag your project targets.
-FROM nvidia/cuda:12.6.2-devel-ubuntu24.04
+FROM nvidia/cuda:12.6.2-devel-ubuntu24.04@sha256:738fba0fbdb225b7a2931c58a5c8f03a84d3cd2f6a84975826a157339ef750b8
 
 ENV DEBIAN_FRONTEND=noninteractive
 
