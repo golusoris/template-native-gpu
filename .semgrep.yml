@@ -1,6 +1,6 @@
-# Custom semantic patterns for PROJECT. Standard rule packs (cert-c, cwe-top-25)
-# are pulled in via `semgrep --config p/cert-c-strict --config p/cwe-top-25` in
-# CI; this file holds project-specific rules.
+# Custom semantic patterns for PROJECT. Standard rule packs (p/c, p/cwe-top-25)
+# are pulled in by scripts/ci/semgrep-scan.sh; this file holds
+# project-specific rules.
 #
 # TEMPLATE: the rules below are reusable defaults for a native C/C++ + GPU
 # project. Keep them; add your own domain rules alongside.

@@ -32,6 +32,6 @@ jobs:
           name: scorecard-results
           path: results.sarif
           retention-days: 5
-      - uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v4.32.6
+      - uses: github/codeql-action/upload-sarif@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
         with:
           sarif_file: results.sarif

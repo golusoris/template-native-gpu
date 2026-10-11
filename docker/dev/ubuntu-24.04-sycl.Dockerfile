@@ -3,7 +3,7 @@
 # stays gcc/clang; only the SYCL TUs go through icpx (see core/meson.build).
 #
 # TEMPLATE: pin the oneAPI tag your project targets.
-FROM intel/oneapi-basekit:2025.1.0-0-devel-ubuntu24.04
+FROM intel/oneapi-basekit:2025.1.0-0-devel-ubuntu24.04@sha256:f1aa2341564b065d5eeb3b6706759f04b7f250084501ff4dc4c0bb0c77c3b746
 
 ENV DEBIAN_FRONTEND=noninteractive
 
