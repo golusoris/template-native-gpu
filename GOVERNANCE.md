@@ -6,6 +6,16 @@ PROJECT uses a **BDFL-delegated maintainer** model. A small set of maintainers
 (see [MAINTAINERS.md](MAINTAINERS.md)) holds merge rights; one lead maintainer
 breaks ties and owns the roadmap.
 
+## This template repository
+
+TEMPLATE: this section describes `golusoris/template-native-gpu` itself. Replace
+it with your own review policy when you adopt the template.
+
+The template repository is maintained by a single maintainer (@lusoris). The
+maintainer merges changes after the `required-checks` status is green; there is
+no second human reviewer. Automated checks (CI, CodeQL, semgrep, gitleaks,
+trivy, Scorecard) stand in for that review.
+
 ## Decision making
 
 - **Code changes** merge after CODEOWNERS review + a green `required-checks`
