@@ -24,7 +24,7 @@ bumps for additive change; consumers read `min(known_size, dir.size)` bytes.
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not chosen |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Protobuf/FlatBuffers | Mature evolution story | Heavy dep, not zero-copy in C filters | Overkill for a flat per-frame blob |
 | Bare struct on the wire | Trivial | Breaks on any field add; no forward-compat | Fails the evolution requirement |
 | Append-only section directory | Zero-copy, forward+back compat, no dep | Hand-rolled framing | — (chosen) |

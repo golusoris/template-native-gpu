@@ -26,7 +26,7 @@ propagated once via `declare_dependency(link_args:['-fsycl'])`.
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not chosen |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | One backend only | Simple | Locks out hardware | Defeats the purpose |
 | Runtime dlopen of backend plugins | Decoupled | Complex packaging, ABI surface per plugin | Heavier than custom_target embedding |
 | custom_target + stub TUs | Builds anywhere, single .so | Per-backend stub discipline | — (chosen) |

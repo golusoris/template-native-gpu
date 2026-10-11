@@ -17,6 +17,8 @@ repos:
         exclude: '\.patch$|^subprojects/|\.(spv|metallib|fatbin|hsaco|bin|yuv|so|a|dylib|dll)$'
       - id: check-merge-conflict
       - id: check-yaml
+        # .clang-format carries one YAML document per language.
+        args: ["--allow-multiple-documents"]
         # Helm templates contain Go template syntax ({{- if ... }}) that is not
         # valid YAML; mkdocs.yml uses !!python/name: tags the SafeLoader rejects.
         exclude: '^deploy/helm/.*/templates/|^mkdocs\.yml$'

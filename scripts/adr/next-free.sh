@@ -18,14 +18,14 @@ ADR_DIR="$(cd "$HERE/../../docs/adr" && pwd)"
 
 max=0
 for f in "$ADR_DIR"/[0-9][0-9][0-9][0-9]-*.md; do
-    [ -e "$f" ] || continue
-    base="$(basename "$f")"
-    num="${base%%-*}"
-    # strip leading zeros for arithmetic, default 0
-    n=$((10#$num))
-    if [ "$n" -gt "$max" ]; then
-        max="$n"
-    fi
+  [ -e "$f" ] || continue
+  base="$(basename "$f")"
+  num="${base%%-*}"
+  # strip leading zeros for arithmetic, default 0
+  n=$((10#$num))
+  if [ "$n" -gt "$max" ]; then
+    max="$n"
+  fi
 done
 
 printf '%04d\n' "$((max + 1))"

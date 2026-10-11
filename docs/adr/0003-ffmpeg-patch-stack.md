@@ -24,7 +24,7 @@ disable it).
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not chosen |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Full FFmpeg fork | Simple to build | Heavy maintenance, drifts | Unsustainable |
 | Out-of-tree filter plugin | No FFmpeg edit | FFmpeg's plugin ABI is unstable / limited for Vulkan | Vulkan filters need in-tree wiring |
 | Patch stack from files/ | Rebasable, upstream-trackable | Regeneration discipline | — (chosen) |

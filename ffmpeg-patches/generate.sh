@@ -30,9 +30,10 @@ git -C "$FFMPEG_REPO" worktree remove --force "$WORKTREE" 2>/dev/null || true
 git -C "$FFMPEG_REPO" worktree add --detach "$WORKTREE" "$BASE_TAG"
 
 # One commit per filter, in stack order, so format-patch yields 0001, 0002, ...
-for filter in project; do
-    cp "$FILES_DIR/vf_${filter}_vulkan.c" "$WORKTREE/libavfilter/"
-    python3 - "$WORKTREE" "$filter" <<'PY'
+filters=(project)
+for filter in "${filters[@]}"; do
+  cp "$FILES_DIR/vf_${filter}_vulkan.c" "$WORKTREE/libavfilter/"
+  python3 - "$WORKTREE" "$filter" <<'PY'
 import sys, pathlib
 root, which = pathlib.Path(sys.argv[1]), sys.argv[2]
 
@@ -73,16 +74,16 @@ else:
     sys.exit("unknown filter: " + which)
 print(f"registration applied: {which}")
 PY
-    git -C "$WORKTREE" add -A
-    git -C "$WORKTREE" \
-        -c user.name="PROJECT bot" -c user.email="bot@example.com" \
-        commit -q -F "$HERE/.commit-msg-${filter}.txt"
+  git -C "$WORKTREE" add -A
+  git -C "$WORKTREE" \
+    -c user.name="PROJECT bot" -c user.email="bot@example.com" \
+    commit -q -F "$HERE/.commit-msg-${filter}.txt"
 done
 
 # Clean stale patches, regenerate the whole range.
 rm -f "$HERE"/0*.patch
 git -C "$WORKTREE" format-patch --zero-commit --start-number=1 \
-    -o "$HERE" "$BASE_TAG..HEAD"
+  -o "$HERE" "$BASE_TAG..HEAD"
 
 # Normalize auto-generated filenames to the series.txt names.
 mv "$HERE"/0001-*.patch "$HERE/0001-add-vf_project_vulkan.patch" 2>/dev/null || true

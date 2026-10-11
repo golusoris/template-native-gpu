@@ -33,7 +33,7 @@ Rename these consistently when you instantiate the template (a single
 case-preserving sweep does it). The scheme:
 
 | Placeholder | Meaning | Example real value |
-|---|---|---|
+| --- | --- | --- |
 | `project` | library + product name, lowercase (dirs, soname, pkg-config) | `pelorus` |
 | `PROJECT` | the same name in prose / display form | `Pelorus` |
 | `libproject` | the shared core library dir + `lib<name>.so` | `libpelorus` |

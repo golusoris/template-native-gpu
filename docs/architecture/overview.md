@@ -11,7 +11,7 @@ metadata across a filtergraph or an IPC boundary.
 ## Containers
 
 | Container | Tech | Responsibility |
-|---|---|---|
+| --- | --- | --- |
 | `libproject` | C11 shared lib | The interop ABI (pack/parse) + the core compute. The single source of truth both filters and tooling link. |
 | `vf_project_*` filters | FFmpeg + Vulkan compute | In-VRAM pre-encode passes; attach the interop blob as SEI side data. |
 | Full GPU matrix | meson + CUDA/HIP/Metal/SYCL/Vulkan | Multi-backend compute dispatch behind one host layer (example variant). |
