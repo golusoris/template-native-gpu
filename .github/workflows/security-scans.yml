@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: cargo-deny
         run: |
-          if ls Cargo.toml */Cargo.toml >/dev/null 2>&1; then
+          if ls -- Cargo.toml */Cargo.toml >/dev/null 2>&1; then
             cargo install cargo-deny --locked
             cargo deny check
           else
