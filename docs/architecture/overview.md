@@ -38,7 +38,7 @@ stub so symbols always resolve. See ADR-0004.
 
 ## Cross-cutting
 
-Supply chain (SLSA L3 + cosign + SBOM), security scans (CodeQL/semgrep/trivy/
-gitleaks), sanitizers + fuzz, and an app-agnostic Helm chart with GPU node
-affinity. See the diagrams you add under `docs/architecture/` as the project
-grows.
+Supply chain (build provenance at SLSA Build L2 + cosign + SBOM), security scans
+(CodeQL/semgrep/trivy/gitleaks), sanitizers + fuzz, and an app-agnostic Helm
+chart with GPU node affinity. See the diagrams you add under
+`docs/architecture/` as the project grows.

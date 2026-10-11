@@ -45,7 +45,7 @@ pre-commit run --all-files        # format + lint + gitleaks (the local gate)
   in reductions for CPU↔GPU bit-exactness.
 - **C4 + ADRs** — decisions in `docs/adr/` (Nygard); Accepted bodies immutable.
 - **Wire/supply-chain** — RFC 9457 error bodies (if you add an HTTP surface),
-  OpenAPI 3.1, SLSA L3 + cosign + SBOM on release.
+  OpenAPI 3.1, build provenance (SLSA Build L2) + cosign + SBOM on release.
 
 ## The two load-bearing patterns (don't break)
 

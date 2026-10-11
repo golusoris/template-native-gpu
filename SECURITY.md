@@ -33,14 +33,17 @@ Please include:
 
 ## Supply-chain assurances
 
-Releases ship with SLSA L3 provenance, Sigstore keyless (cosign) signatures, and
-both SPDX + CycloneDX SBOMs (see `.github/workflows/supply-chain.yml`). Verify a
-release artifact:
+Releases ship with a build provenance attestation, Sigstore keyless (cosign)
+signatures, and both SPDX + CycloneDX SBOMs (see
+`.github/workflows/supply-chain.yml`). The attestation is a GitHub artifact
+attestation, which GitHub documents as SLSA v1.0 Build Level 2; no higher level
+is claimed. Verify a release artifact:
 
 ```bash
 cosign verify-blob --bundle <artifact>.bundle <artifact>
+gh attestation verify <artifact> --repo <owner>/<repository>
 ```
 
 This project targets the controls scaffolded for OWASP ASVS L2, NIST SSDF, and
-SLSA L3. Downstream products assert their compliance posture in their own
-`SECURITY.md`.
+SLSA v1.0 Build Level 2. Downstream products assert their compliance posture in
+their own `SECURITY.md`.

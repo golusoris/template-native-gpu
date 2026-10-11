@@ -1,10 +1,13 @@
-# Supply-chain provenance: SLSA L3 build, Sigstore keyless signing, SBOM.
-# Triggered when release-please publishes a tag.
+# Supply-chain provenance: build provenance attestation, Sigstore keyless
+# signing, SBOM. Triggered when release-please publishes a tag.
 #
-# TEMPLATE: action SHAs are pinned (Scorecard / SLSA require it). Renovate's
-# `helpers:pinGitHubActionDigests` keeps them current — bump via PR, don't
-# unpin. The reusable SLSA workflow is the one exception (it must use a vX.Y.Z
-# tag ref); audit its bumps in a dedicated PR.
+# The attestation is a GitHub artifact attestation, which GitHub documents as
+# SLSA v1.0 Build Level 2. Level 3 needs the build in a reusable workflow that
+# is isolated from its caller; this workflow does not claim it.
+#
+# TEMPLATE: action SHAs are pinned (Scorecard and the repository's commit-pin
+# setting require it). Renovate's `helpers:pinGitHubActionDigests` keeps them
+# current — bump via PR, don't unpin.
 
 name: supply-chain
 on:
@@ -31,8 +34,8 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
-    outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
+      id-token: write # Sigstore signing certificate for the attestation
+      attestations: write # store the attestation
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -49,11 +52,10 @@ jobs:
         run: |
           mkdir -p artifacts
           cp build/libproject/libproject.so* artifacts/ 2>/dev/null || true
-      - name: Compute SHA256 hashes (SLSA input)
-        id: hash
-        run: |
-          cd artifacts
-          echo "hashes=$(sha256sum -- * | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: artifacts/*
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-artifacts
@@ -109,17 +111,3 @@ jobs:
         with:
           name: signatures
           path: artifacts/*.bundle
-
-  slsa-provenance:
-    name: SLSA L3 provenance
-    needs: build-artifacts
-    permissions:
-      id-token: write
-      contents: write
-      actions: read
-    # Reusable-workflow refs cannot be SHA-pinned in all consumers; the SLSA
-    # maintainers recommend the vX.Y.Z tag form. Audit bumps in a dedicated PR.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
-    with:
-      base64-subjects: ${{ needs.build-artifacts.outputs.hashes }}
-      upload-assets: ${{ github.event_name == 'release' }}
