@@ -29,7 +29,8 @@ checklist around it.
    ```
 
 4. **Supply chain.** The `release: published` event triggers
-   `supply-chain.yml` (SLSA L3 provenance + cosign signatures + SBOM). Confirm:
+   `supply-chain.yml` (build provenance attestation + cosign signatures + SBOM).
+   Confirm:
 
    ```bash
    gh run list --workflow supply-chain.yml --limit 1
@@ -39,6 +40,7 @@ checklist around it.
 
    ```bash
    cosign verify-blob --bundle <artifact>.bundle <artifact>
+   gh attestation verify <artifact> --repo <owner>/<repository>
    ```
 
 Never hand-edit CHANGELOG.md or hand-create the tag — let release-please own

@@ -59,9 +59,10 @@ in `.github/`, `SECURITY.md`, `mkdocs.yml`, `deploy/helm/`.
 - **Build**: meson + ninja, warning-clean baseline, pkg-config export.
 - **CI** (`.github/workflows/`): `ci` (build+test matrix, format/lint),
   `security-scans` (CodeQL, semgrep, trivy, gitleaks, cargo-deny),
-  `sanitizers` (ASan/UBSan/TSan + fuzz smoke), `supply-chain` (SLSA L3 + cosign
-  keyless + SBOM), `scorecard`, `docker-publish` (multi-arch + provenance),
-  `release-please`, `required-aggregator` (the single required check).
+  `sanitizers` (ASan/UBSan/TSan + fuzz smoke), `supply-chain` (build
+  provenance + cosign keyless + SBOM), `scorecard`, `docker-publish`
+  (multi-arch + provenance), `release-please`, `required-aggregator` (the
+  single required check).
 - **Quality config**: `.clang-format`, `.clang-tidy`, `.semgrep.yml`,
   `.gitleaks.toml`, `.cppcheck-suppressions.txt`, `.codespellrc`,
   `.markdownlint.json`, `.editorconfig`, `.iwyu.imp`, `.pre-commit-config.yaml`,

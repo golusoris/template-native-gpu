@@ -1,0 +1,1 @@
+- Release provenance is now a GitHub artifact attestation from the commit-pinned `actions/attest-build-provenance` (SLSA v1.0 Build Level 2); the docs no longer state Level 3. Verify with `gh attestation verify <artifact> --repo <owner>/<repository>`.

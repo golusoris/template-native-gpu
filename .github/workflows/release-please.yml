@@ -1,6 +1,6 @@
 # release-please: open/maintain a release PR from Conventional Commits, and cut
 # a tag + GitHub release when that PR merges. The published `release` event then
-# triggers supply-chain.yml (SLSA + cosign + SBOM).
+# triggers supply-chain.yml (build provenance + cosign + SBOM).
 
 name: release-please
 on:

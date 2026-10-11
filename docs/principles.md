@@ -48,8 +48,8 @@ Accepted bodies are immutable — supersede, don't edit.
 
 ## §2.5 Security + supply chain
 
-The template scaffolds the controls for SLSA L3 (provenance), OWASP ASVS L2, NIST
-SSDF, and keyless signing + SBOM on release. Products built from it assert their
+The template scaffolds the controls for SLSA v1.0 Build Level 2 (provenance
+attestation), OWASP ASVS L2, NIST SSDF, and keyless signing + SBOM on release. Products built from it assert their
 own compliance posture in their `SECURITY.md`.
 
 ## §2.6 Wire protocols
