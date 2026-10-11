@@ -28,7 +28,7 @@ meson setup build-gpu examples/full-gpu-matrix/core && meson test -C build-gpu
 ## Skills available (`.claude/skills/`)
 
 | Skill | When |
-|---|---|
+| --- | --- |
 | `add-gpu-backend` | Adding a CUDA/HIP/Metal/SYCL-shaped backend to the matrix example |
 | `new-adr` | Recording an architecture decision |
 | `render-changelog` | Previewing the changelog.d/ fragments |

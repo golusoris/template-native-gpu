@@ -20,7 +20,7 @@ All `dir[]` offsets are relative to the header start (`magic[0]`).
 ## Evolution rules (R1–R6)
 
 | Rule | Meaning |
-|---|---|
+| --- | --- |
 | R1 | **Append-only.** New fields at the end of a section, or a new section bit. |
 | R2 | **Never remove** a bit or field. Deprecate by docs; the slot stays reserved. |
 | R3 | Every section is optional (gated by `section_mask`). Ignore unknown bits; tolerate missing known bits. |

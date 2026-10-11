@@ -19,7 +19,7 @@ rewrite Accepted bodies. The `## References` section is verbatim by design.
 ## Seed ADRs
 
 | # | Title |
-|---|---|
+| --- | --- |
 | [0001](0001-project-genesis.md) | Project genesis + the BSD-2-Clause-Patent license choice |
 | [0002](0002-interop-sidedata-abi.md) | Append-only side-data interop ABI |
 | [0003](0003-ffmpeg-patch-stack.md) | FFmpeg patch-stack delivery model |

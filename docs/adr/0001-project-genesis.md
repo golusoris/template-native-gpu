@@ -23,7 +23,7 @@ a.k.a. BSD+Patent), with an optional secondary **MIT** for dual-licensed files
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not chosen |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Apache-2.0 | Express patent grant, widely understood | Not GPL-2 compatible | Blocks linking into GPL-2 FFmpeg builds |
 | MIT / BSD-2 | Minimal, ubiquitous | No patent grant | GPU/codec patent exposure for users |
 | BSD-2-Clause-Patent | Permissive + GPL-2 compat + patent grant | Less common, slightly longer | — (chosen) |

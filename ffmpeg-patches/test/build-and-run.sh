@@ -24,9 +24,9 @@ JOBS="${JOBS:-$(nproc)}"
 
 echo "== libproject pkg-config =="
 pkg-config --exists libproject || {
-    echo "ERROR: libproject not found by pkg-config. Build+install it first:"
-    echo "  meson setup build && ninja -C build && ninja -C build install"
-    exit 1
+  echo "ERROR: libproject not found by pkg-config. Build+install it first:"
+  echo "  meson setup build && ninja -C build && ninja -C build install"
+  exit 1
 }
 pkg-config --modversion libproject
 
@@ -34,17 +34,20 @@ echo "== applying patch stack onto $BASE_TAG =="
 git -C "$FFMPEG_REPO" worktree remove --force "$WORKTREE" 2>/dev/null || true
 git -C "$FFMPEG_REPO" worktree add --detach "$WORKTREE" "$BASE_TAG"
 while read -r p; do
-    case "$p" in ''|\#*) continue;; esac
-    echo "  am: $p"
-    git -C "$WORKTREE" am --3way "$PATCHDIR/$p"
-done < "$PATCHDIR/series.txt"
+  case "$p" in '' | \#*) continue ;; esac
+  echo "  am: $p"
+  git -C "$WORKTREE" am --3way "$PATCHDIR/$p"
+done <"$PATCHDIR/series.txt"
 
 echo "== configure =="
-( cd "$WORKTREE" && ./configure \
-    --enable-vulkan --enable-libshaderc \
-    --disable-doc --disable-programs --enable-ffmpeg \
-    >/tmp/project-ff-configure.log 2>&1 ) || {
-    echo "configure failed; tail:"; tail -30 /tmp/project-ff-configure.log; exit 1; }
+(cd "$WORKTREE" && ./configure \
+  --enable-vulkan --enable-libshaderc \
+  --disable-doc --disable-programs --enable-ffmpeg \
+  >/tmp/project-ff-configure.log 2>&1) || {
+  echo "configure failed; tail:"
+  tail -30 /tmp/project-ff-configure.log
+  exit 1
+}
 
 echo "== single-TU compile (filter only) =="
 make -C "$WORKTREE" -j"$JOBS" libavfilter/vf_project_vulkan.o

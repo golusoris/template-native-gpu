@@ -9,11 +9,11 @@ the single-Vulkan-shader minimal seed at the repo root.
 ## What it demonstrates
 
 | Backend | Device-code pipeline | Host wiring |
-|---|---|---|
-| CUDA   | `.cu` → `nvcc --fatbin` → `bin2c` → embedded `*_ptx[]` C array | `cuda/common.c` (HAVE_CUDA) / `cuda/stubs.c` (-ENOSYS) |
-| HIP    | `.hip` → `hipcc --genco` → `.hsaco` → `xxd -i` → embedded `*_hsaco[]` | `hip/common.c` (HAVE_HIP/HAVE_HIPCC) / `hip/stubs.c` |
-| Metal  | `.metal` → `xcrun metal` → `.air` → `xcrun metallib` → embedded `__TEXT,__metallib` | `metal/common.m` (HAVE_METAL, darwin only) / `metal/stubs.c` |
-| SYCL   | single-source `.cpp` → `icpx -fsycl` → `.o` | `sycl/common.cpp` (HAVE_SYCL) / `sycl/stubs.c` |
+| --- | --- | --- |
+| CUDA | `.cu` → `nvcc --fatbin` → `bin2c` → embedded `*_ptx[]` C array | `cuda/common.c` (HAVE_CUDA) / `cuda/stubs.c` (-ENOSYS) |
+| HIP | `.hip` → `hipcc --genco` → `.hsaco` → `xxd -i` → embedded `*_hsaco[]` | `hip/common.c` (HAVE_HIP/HAVE_HIPCC) / `hip/stubs.c` |
+| Metal | `.metal` → `xcrun metal` → `.air` → `xcrun metallib` → embedded `__TEXT,__metallib` | `metal/common.m` (HAVE_METAL, darwin only) / `metal/stubs.c` |
+| SYCL | single-source `.cpp` → `icpx -fsycl` → `.o` | `sycl/common.cpp` (HAVE_SYCL) / `sycl/stubs.c` |
 | Vulkan | `.comp` → `glslangValidator -V` → `.spv` | runtime-loaded SPIR-V |
 
 Plus the **backend-agnostic** host glue that every backend shares:

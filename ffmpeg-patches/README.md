@@ -14,7 +14,7 @@ it. See [docs/adr/0003-ffmpeg-patch-stack.md](../docs/adr/0003-ffmpeg-patch-stac
 ## Layout
 
 | Path | Role |
-|---|---|
+| --- | --- |
 | `files/` | Canonical filter sources — the source of truth a maintainer edits. |
 | `0001-*.patch` … | Generated artifacts (`git format-patch`), the applied form. |
 | `series.txt` | Ordered apply list (cumulative stack). |
