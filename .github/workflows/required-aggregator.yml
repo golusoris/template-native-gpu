@@ -1,8 +1,14 @@
 # Single required status check for branch protection. Instead of marking every
 # matrix leg "required" (which breaks when a leg is renamed), protect main on
-# THIS one job. It waits for the upstream jobs and fails if any did not succeed.
+# THIS one job. It waits for the upstream jobs, then requires every check run
+# on the commit to have succeeded (scripts/ci/required-checks.sh).
 #
 # Branch protection: require the "required-checks" status only.
+#
+# REQUIRED lists the checks that must be present, so a workflow that never
+# started cannot pass by absence. ALLOWED_SKIPS lists, by name, the only checks
+# that may be skipped: jobs a change detector in the same run decided are not
+# affected. This template has no change detector, so the list is empty.
 
 name: required-aggregator
 on:
@@ -12,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  checks: read
 
 jobs:
   required-checks:
@@ -19,14 +26,37 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Test the check judge
+        run: bash scripts/ci/required-checks_test.sh
+      # Waits only; a failure ends the wait early, the next step judges skips.
       - name: Wait for upstream workflows
         uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           running-workflow-name: required-checks
-          # Wait for every check except this aggregator itself.
           allowed-conclusions: success,skipped
           wait-interval: 20
-      - name: All required checks passed
-        run: echo "ok"
+      - name: Require success from every check run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          SELF: required-checks
+          ALLOWED_SKIPS: ""
+          REQUIRED: |
+            format + lint
+            build + test (ubuntu-26.04)
+            build + test (macos-latest)
+            ASan + UBSan
+            ThreadSanitizer
+            libFuzzer smoke
+            CodeQL (C/C++)
+            semgrep
+            gitleaks
+            trivy filesystem
+            cargo-deny (if Rust present)
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}/check-runs?per_page=100" --paginate \
+            --jq '.check_runs[] | {name, status, conclusion}' |
+            bash scripts/ci/required-checks.sh
