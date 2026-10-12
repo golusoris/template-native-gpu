@@ -50,6 +50,8 @@ jobs:
 
   format-lint:
     name: format + lint
+    # PLANTED: a mandatory job that never runs; the aggregator must refuse it.
+    if: false
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
