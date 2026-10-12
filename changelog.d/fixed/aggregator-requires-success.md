@@ -1,0 +1,1 @@
+- The `required-checks` aggregator requires success from every check run on the commit. A check may be skipped only when its name is in `ALLOWED_SKIPS`, and every check in `REQUIRED` must be present.
