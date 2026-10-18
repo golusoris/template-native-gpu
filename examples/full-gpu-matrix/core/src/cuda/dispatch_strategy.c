@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  CUDA dispatch_strategy. Today returns DIRECT for every feature; the env
  *  override + decision surface are wired so graph capture can land later.

@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  -ENOSYS fallbacks for the Metal surface when built without Metal (the auto
  *  option resolves to disabled on every non-darwin host).

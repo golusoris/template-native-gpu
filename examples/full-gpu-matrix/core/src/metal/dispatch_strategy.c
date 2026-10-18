@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  Metal dispatch_strategy (pure C — the real Metal API dispatch is in
  *  common.m). Mirrors cuda/dispatch_strategy.c.

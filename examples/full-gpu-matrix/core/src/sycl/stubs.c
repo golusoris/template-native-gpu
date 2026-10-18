@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  -ENOSYS fallbacks for the SYCL surface when built without enable_sycl.
  *  Compiled by the host C compiler (no icpx needed for the disabled build).

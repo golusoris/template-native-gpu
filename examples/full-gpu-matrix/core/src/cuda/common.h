@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  CUDA backend common surface. Real bodies live behind HAVE_CUDA; the -ENOSYS
  *  fallbacks live in stubs.c for the no-CUDA build.

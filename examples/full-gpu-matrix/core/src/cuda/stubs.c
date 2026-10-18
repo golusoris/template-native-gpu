@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  -ENOSYS fallbacks for the CUDA surface when built without enable_cuda.
  *  Without this TU the symbols are not emitted at all (the real bodies in

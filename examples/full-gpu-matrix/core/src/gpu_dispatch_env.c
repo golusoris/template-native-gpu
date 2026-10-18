@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  See gpu_dispatch_env.h. Snapshots up to a small fixed number of distinct env
  *  variables, each under its own pthread_once / InitOnceExecuteOnce gate.

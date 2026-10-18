@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  Metal backend common surface. Real bodies behind HAVE_METAL (common.m, an
  *  Objective-C TU); -ENOSYS fallbacks in stubs.c. The compiled metallib is

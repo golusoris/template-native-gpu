@@ -1,6 +1,6 @@
 /*
  * Copyright 2026 The PROJECT Authors
- * SPDX-License-Identifier: BSD-2-Clause-Patent
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * scale_kernel.hip — trivial illustrative HIP kernel. `hipcc --genco` compiles
  * this to a .hsaco fat binary which `xxd -i` embeds as `scale_kernel_hsaco[]`

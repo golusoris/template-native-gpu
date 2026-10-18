@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  Backend-agnostic dispatch tests. No GPU required — these exercise the env
  *  parser, the once-snapshot, and the round-robin picture pool.

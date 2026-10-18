@@ -2,9 +2,9 @@
 #
 # generate.sh — regenerate the PROJECT FFmpeg patch stack from files/.
 #
-# Copyright 2026 The PROJECT Authors. BSD-2-Clause-Patent for the patches
-# authored here; the linked FFmpeg binary's distribution is governed by FFmpeg's
-# LGPL/GPL.
+# Copyright 2026 The PROJECT Authors. This script is EUPL-1.2 tooling; the
+# patches it generates and the sources under files/ are LGPL-2.1-or-later as
+# part of FFmpeg (see REUSE.toml).
 #
 # Pattern: check out a pristine FFmpeg base in an isolated git worktree, drop in
 # the canonical filter sources from files/, wire each filter's registration

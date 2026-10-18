@@ -14,7 +14,7 @@
 #   scripts/release/concat-changelog-fragments.sh --check   # exit 1 if no fragments
 #
 # Copyright 2026 The PROJECT Authors
-# SPDX-License-Identifier: BSD-2-Clause-Patent
+# SPDX-License-Identifier: EUPL-1.2
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

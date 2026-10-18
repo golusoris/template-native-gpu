@@ -3,7 +3,7 @@
 # build-and-run.sh — apply the PROJECT patch stack to a pristine FFmpeg n8.1.1,
 # build, and smoke-test the filters. The CI gate for ffmpeg-patches/.
 #
-# Copyright 2026 The PROJECT Authors. BSD-2-Clause-Patent.
+# Copyright 2026 The PROJECT Authors. EUPL-1.2.
 #
 # Requires: a FFmpeg git checkout, libproject installed (pkg-config), a Vulkan
 # loader + headers, and a SPIR-V compiler (libshaderc or libglslang).
