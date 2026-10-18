@@ -1,0 +1,1 @@
+- Add `osv-scanner.toml` as the declared advisory exception list and `scripts/ci/advisory-exceptions.py`, which fails CI once an entry expires; first entry: CVE-2026-59951 (mcp via semgrep's exact pin, category C).
