@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git ca-certificates python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+# Non-root by default (rootless-friendly).
+ARG USER=dev
+RUN useradd -ms /bin/bash "$USER"
+USER ${USER}
 WORKDIR /workspace
 
 # The oneAPI image sources its env via /opt/intel/oneapi/setvars.sh; do that in
@@ -20,4 +24,6 @@ WORKDIR /workspace
 #   . /opt/intel/oneapi/setvars.sh
 #   meson setup build examples/full-gpu-matrix/core -Denable_sycl=true -Dsycl_compiler=icpx
 #   meson compile -C build
+# Interactive dev shell, no service to probe.
+HEALTHCHECK NONE
 CMD ["bash"]

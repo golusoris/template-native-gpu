@@ -1,0 +1,1 @@
+- Run the CUDA and SYCL dev images as a non-root user, declare `HEALTHCHECK NONE` on all dev images, set `runAsGroup` and the release namespace in the Helm chart, and trust `ghcr.io` for the chart image in the Trivy scan; clears Trivy DS-0002, DS-0026, KSV-0021, KSV-0110 and KSV-0125.

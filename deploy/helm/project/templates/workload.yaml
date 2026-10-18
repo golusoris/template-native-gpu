@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "project.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "project.labels" . | nindent 4 }}
 spec:
@@ -21,6 +22,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "project.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "project.labels" . | nindent 4 }}
 spec:
@@ -40,6 +42,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "project.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "project.labels" . | nindent 4 }}
 spec:

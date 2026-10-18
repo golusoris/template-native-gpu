@@ -43,5 +43,5 @@ fi
 image="${SCAN_IMAGE_REGISTRY:-mirror.gcr.io}/aquasec/trivy:${TRIVY_VERSION}@${TRIVY_IMAGE_DIGEST}"
 "${DOCKER_BIN:-docker}" run --rm \
   -v "$repo_root:/src:ro" -v "$out_dir:/out" -w /src \
-  "$image" fs --scanners vuln,secret,misconfig \
+  "$image" fs --scanners vuln,secret,misconfig --config-data .config/trivy \
   --format sarif --output "/out/$out_name" --skip-version-check .
