@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  libFuzzer target for the dispatch env parser. The parser walks untrusted
  *  env-variable bytes, so it is a natural fuzz surface. Build via the meson

@@ -1,6 +1,6 @@
 /*
  * Copyright 2026 The PROJECT Authors
- * SPDX-License-Identifier: BSD-2-Clause-Patent
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * scale_kernel.cu — trivial illustrative CUDA kernel. nvcc compiles this to a
  * .fatbin which bin2c embeds as `scale_kernel_ptx[]` (see core/meson.build).

@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  CUDA dispatch_strategy — translates a per-feature request into a CUDA
  *  submission strategy. Today every path uses direct stream submission; this

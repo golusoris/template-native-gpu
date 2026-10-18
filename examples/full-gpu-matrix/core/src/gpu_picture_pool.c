@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  Backend-agnostic GPU picture pool — see gpu_picture_pool.h.
  *  Adapted from: vmaf/core/src/gpu_picture_pool.{h,c}.

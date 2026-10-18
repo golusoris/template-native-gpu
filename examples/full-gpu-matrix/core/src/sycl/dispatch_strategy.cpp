@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  SYCL dispatch_strategy. Compiled by icpx -fsycl (see core/meson.build).
  *  Demonstrates that the shared gpu_dispatch_parse.h header is #include-able

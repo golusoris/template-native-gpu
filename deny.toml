@@ -4,14 +4,14 @@
 # workflow runs `cargo deny check` only when a Cargo.toml exists.
 #
 # Policy summary:
-#   * Licenses   — allow permissive + the project's BSD-2-Clause-Patent.
+#   * Licenses   — allow permissive dependency licences (project is EUPL-1.2).
 #                  Deny strong copyleft (GPL/AGPL/SSPL).
 #   * Bans       — deny openssl-sys / native-tls (prefer rustls); warn on
 #                  multiple versions.
 #   * Advisories — RustSec database; vulnerabilities deny, yanked/notice warn.
 #   * Sources    — crates.io only; deny unknown registries + unknown git.
 #
-# SPDX-License-Identifier: BSD-2-Clause-Patent OR MIT
+# SPDX-License-Identifier: EUPL-1.2
 
 [graph]
 targets = [

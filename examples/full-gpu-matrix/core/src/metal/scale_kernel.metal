@@ -1,6 +1,6 @@
 /*
  * Copyright 2026 The PROJECT Authors
- * SPDX-License-Identifier: BSD-2-Clause-Patent
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * scale_kernel.metal — trivial illustrative Metal compute kernel. `xcrun metal`
  * compiles this to a .air, then `xcrun metallib` links it into default.metallib

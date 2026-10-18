@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  HIP dispatch_strategy. Mirrors the CUDA twin. Env override:
  *  PROJ_HIP_DISPATCH=<feature>:graph,<feature>:direct,...

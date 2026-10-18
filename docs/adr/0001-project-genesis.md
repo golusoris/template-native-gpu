@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD013 MD041 -->
 # ADR-0001: Project genesis + BSD-2-Clause-Patent license
 
-- **Status**: Accepted
+- **Status**: Superseded by [ADR-0005](0005-eupl-licence.md) (licence choice)
 - **Date**: 2026-01-01
 - **Deciders**: maintainers
 - **Tags**: license, governance

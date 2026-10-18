@@ -66,6 +66,9 @@ sources and the regenerated `*.patch` in the same change.
 
 ## License
 
-BSD-2-Clause-Patent for the patches authored here; the linked FFmpeg binary's
-distribution is governed by FFmpeg's LGPL/GPL. New `libavfilter/*.c` files carry
-FFmpeg's LGPL-2.1 header (they become part of FFmpeg when applied).
+The sources under `files/` and the generated `*.patch` files are
+LGPL-2.1-or-later: they become part of FFmpeg when applied, so new
+`libavfilter/*.c` files carry FFmpeg's LGPL-2.1 header and FFmpeg's copyright
+applies next to the authors'. `generate.sh`, `series.txt` and `test/` are
+tooling under the project's EUPL-1.2. `REUSE.toml` at the repository root
+records both.

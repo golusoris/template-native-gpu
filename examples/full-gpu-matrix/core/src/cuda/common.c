@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  CUDA backend host glue (HAVE_CUDA path). TEMPLATE: the bodies here are
  *  illustrative stubs that return -ENOSYS even when HAVE_CUDA is set, because

@@ -14,6 +14,6 @@ Rules:
   silently disables the filter. Gate it via the `enabled <filter> &&
   require_pkg_config` line instead.
 - New filter source files carry FFmpeg's **LGPL-2.1** header (they become part
-  of FFmpeg when applied), not the project's BSD-2-Clause-Patent header.
+  of FFmpeg when applied), not the project's EUPL-1.2 header.
 - Keep the GLSL in the filter and the standalone reference shader
   (`libproject/shaders/`) in lockstep.
