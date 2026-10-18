@@ -1,10 +1,9 @@
 /**
  *
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
- *     Licensed under the BSD+Patent License (the "License").
- *     See LICENSE / https://opensource.org/licenses/BSDplusPatent.
+ *     Licensed under the EUPL-1.2 (the "Licence"). See LICENSE.
  *
  */
 

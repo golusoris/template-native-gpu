@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  Metal backend host glue (HAVE_METAL path). Objective-C; compiled only on a
  *  darwin host (see core/meson.build add_languages('objc')). The bodies return

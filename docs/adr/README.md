@@ -24,3 +24,4 @@ rewrite Accepted bodies. The `## References` section is verbatim by design.
 | [0002](0002-interop-sidedata-abi.md) | Append-only side-data interop ABI |
 | [0003](0003-ffmpeg-patch-stack.md) | FFmpeg patch-stack delivery model |
 | [0004](0004-gpu-backend-dispatch.md) | Multi-backend GPU dispatch + -ENOSYS stubs |
+| [0005](0005-eupl-licence.md) | EUPL-1.2 licence with LGPL-2.1-or-later FFmpeg patches (supersedes 0001 licence) |

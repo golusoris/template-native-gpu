@@ -1,9 +1,10 @@
 PROJECT
 Copyright (c) 2026 The PROJECT Authors
 
-This product is licensed under the BSD-2-Clause-Patent license (see LICENSE),
-which includes an express patent grant. A secondary MIT option is available for
-dual-licensed files (see LICENSE-MIT).
+This product is licensed under the European Union Public Licence v1.2
+(EUPL-1.2, see LICENSE). Documentation text is CC-BY-SA-4.0. The FFmpeg filter
+sources and patches under ffmpeg-patches/ are LGPL-2.1-or-later, as part of
+FFmpeg. REUSE.toml maps every file to its licence; texts are in LICENSES/.
 
 ================================================================================
 Third-party components
@@ -11,8 +12,9 @@ Third-party components
 
 This template ships no third-party code by default. When you vendor a
 dependency or redistribute a third-party model/asset, record it here and add its
-license text under LICENSES/ (one file per SPDX identifier or per asset), per the
-attribution requirements of that component's license (e.g. Apache-2.0 §4).
+license text under LICENSES/ as <SPDX-id>.txt (REUSE allows only licence texts
+there) plus a REUSE.toml table for its paths, per the attribution requirements
+of that component's license (e.g. Apache-2.0 §4).
 
 Example (delete if unused):
 

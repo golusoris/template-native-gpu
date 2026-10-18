@@ -1,7 +1,7 @@
 /*
  * project.comp — trivial illustrative compute shader (standalone reference).
  *
- * Copyright 2026 The PROJECT Authors. BSD-2-Clause-Patent.
+ * Copyright 2026 The PROJECT Authors. EUPL-1.2.
  *
  * TEMPLATE: this shader does a trivial per-pixel scale+bias so the GPU path has
  * a real, compilable kernel. Replace its body with your actual compute. The

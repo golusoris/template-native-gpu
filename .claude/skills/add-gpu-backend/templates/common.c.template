@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  {{Name}} backend host glue (HAVE_{{NAME}} path). Bodies return -ENOSYS until
  *  the real runtime calls replace them. Keep signatures identical to stubs.c.

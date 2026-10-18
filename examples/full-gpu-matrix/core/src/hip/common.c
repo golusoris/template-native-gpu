@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  HIP backend host glue (HAVE_HIP path). The bodies return -ENOSYS until the
  *  real hipModuleLoadData / hipModuleLaunchKernel calls replace them. When

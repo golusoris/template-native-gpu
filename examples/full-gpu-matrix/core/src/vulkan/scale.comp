@@ -1,7 +1,7 @@
 /*
  * scale.comp — trivial illustrative Vulkan compute shader for the GPU-matrix
  * example. glslangValidator compiles this to scale.spv (see core/meson.build).
- * Copyright 2026 The PROJECT Authors. BSD-2-Clause-Patent.
+ * Copyright 2026 The PROJECT Authors. EUPL-1.2.
  */
 #version 450
 

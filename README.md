@@ -75,8 +75,8 @@ in `.github/`, `SECURITY.md`, `mkdocs.yml`, `deploy/helm/`.
 - **Community health**: `SECURITY.md`, `GOVERNANCE.md`, `MAINTAINERS.md`,
   `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `.github/`
   (CODEOWNERS, FUNDING, issue + PR templates).
-- **License**: BSD-2-Clause-Patent (primary) + MIT (secondary) + `LICENSES/` +
-  `NOTICE`.
+- **License**: EUPL-1.2 (code) + CC-BY-SA-4.0 (docs) + LGPL-2.1-or-later
+  (FFmpeg patches), mapped by `REUSE.toml`; texts in `LICENSES/`, plus `NOTICE`.
 - **Deploy**: app-agnostic Helm chart (Deployment | Job | StatefulSet, GPU node
   affinity, ServiceMonitor, hardened pod security, `values.schema.json`),
   devcontainer, dev Dockerfiles (host / CUDA / SYCL).
@@ -107,5 +107,13 @@ in `.github/`, `SECURITY.md`, `mkdocs.yml`, `deploy/helm/`.
 
 ## License
 
-BSD-2-Clause-Patent. See [LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT),
-[NOTICE](NOTICE).
+- Code, configuration and tooling: EUPL-1.2 ([LICENSE](LICENSE)).
+- Documentation text: CC-BY-SA-4.0.
+- FFmpeg filter sources and patches (`ffmpeg-patches/files/`,
+  `ffmpeg-patches/*.patch`): LGPL-2.1-or-later, because they become part of
+  FFmpeg; FFmpeg's copyright applies next to the authors'.
+- `CODE_OF_CONDUCT.md`: CC-BY-4.0 (Contributor Covenant).
+
+[`REUSE.toml`](REUSE.toml) maps every file to its licence and `reuse lint`
+verifies it; licence texts are in [`LICENSES/`](LICENSES/). See also
+[NOTICE](NOTICE) and [ADR-0005](docs/adr/0005-eupl-licence.md).

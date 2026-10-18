@@ -1,6 +1,6 @@
 /**
  *  Copyright 2026 The PROJECT Authors
- *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *  SPDX-License-Identifier: EUPL-1.2
  *
  *  HIP backend common surface. Real bodies behind HAVE_HIP; -ENOSYS fallbacks
  *  in stubs.c. The device kernel is embedded as `scale_kernel_hsaco[]` via

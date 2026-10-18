@@ -1,0 +1,1 @@
+- Relicense the template under EUPL-1.2 (documentation CC-BY-SA-4.0, FFmpeg filter sources and patches LGPL-2.1-or-later), mapped by `REUSE.toml`; drop the BSD-2-Clause-Patent/MIT option (ADR-0005).
