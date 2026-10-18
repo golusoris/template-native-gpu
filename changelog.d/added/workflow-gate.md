@@ -1,0 +1,1 @@
+- Gate every workflow file with actionlint and the zizmor pin audits (`scripts/ci/workflow-check.sh`, required through `required-checks`), and pin the macOS build leg to `macos-26`.
