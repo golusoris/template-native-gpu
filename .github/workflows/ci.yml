@@ -79,3 +79,7 @@ jobs:
         run: python -m pip install --require-hashes -r docker/dev/requirements.txt
       - name: pre-commit (all files)
         run: pre-commit run --all-files --show-diff-on-failure --color=always
+      - name: Advisory exception check refuses its planted cases
+        run: bash scripts/ci/advisory-exceptions_test.sh
+      - name: Advisory exceptions hold (osv-scanner.toml)
+        run: python3 scripts/ci/advisory-exceptions.py

@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 The PROJECT Authors
+# SPDX-License-Identifier: EUPL-1.2
+#
+# Declared exceptions to open dependency advisories that no version in reach
+# fixes. The alert stays open in code scanning (a dismissal carries no expiry);
+# scripts/ci/advisory-exceptions.py fails once ignoreUntil has passed, so each
+# entry is a debt with a due date. The reason names the exception category
+# (A..D) whose interval bounds the expiry.
+
+[[IgnoredVulns]]
+id = "CVE-2026-59951"
+ignoreUntil = 2026-10-28T00:00:00Z
+reason = "Category C (10 days), entered 2026-10-19. mcp 1.29.0 in docker/dev/requirements.txt comes in only through semgrep, whose releases up to 1.181.0 pin mcp==1.29.0 exactly; the fix is mcp 1.30.0. The flaw is unbounded session state in stateful Streamable HTTP servers; the dev image runs the semgrep CLI and serves no MCP HTTP endpoint, so the path is unreachable. No override: pip refuses the lock against semgrep's exact pin. Fix: Renovate bumps semgrep once it allows mcp>=1.30.0 (upstream https://github.com/semgrep/semgrep/issues/11992), which closes code-scanning alerts 18 and 19; then delete this entry."
