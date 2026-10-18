@@ -13,7 +13,7 @@ CHECKOUT=actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 # plant CASE DIR USES [RUNS_ON_KEY]: one workflow whose only step uses USES.
 plant() {
   mkdir -p "$WORK/$1/$2/workflows"
-  cat > "$WORK/$1/$2/workflows/planted.yml" <<YAML
+  cat >"$WORK/$1/$2/workflows/planted.yml" <<YAML
 name: planted
 on:
   pull_request:
@@ -47,7 +47,7 @@ expect_refusal() {
 }
 
 plant clean .github "$CHECKOUT # v7.0.1"
-bash "$HERE/workflow-check.sh" "$WORK/clean" > /dev/null
+bash "$HERE/workflow-check.sh" "$WORK/clean" >/dev/null
 echo "ok   clean: accepted"
 
 plant tag-pin .github "actions/checkout@v7"

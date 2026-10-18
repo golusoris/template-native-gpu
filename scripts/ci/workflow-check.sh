@@ -51,7 +51,7 @@ rc=0
 GH_TOKEN="$TOKEN" "$DOCKER" run --rm -e GH_TOKEN -v "$ROOT:/repo:ro" -w /repo \
   "$ZIZMOR_IMAGE" --no-progress --color never --format json --persona pedantic \
   --no-ignores --no-config --strict-collection "${FILES[@]}" \
-  > "$WORK/report.json" 2> "$WORK/zizmor.log" || rc=$?
+  >"$WORK/report.json" 2>"$WORK/zizmor.log" || rc=$?
 # 0 = no finding, 11 to 14 = findings by highest severity; anything else is a failed run.
 case "$rc" in
   0 | 11 | 12 | 13 | 14) ;;
