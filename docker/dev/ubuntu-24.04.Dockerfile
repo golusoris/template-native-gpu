@@ -29,4 +29,6 @@ COPY --chown=${USER}:${USER} docker/dev/requirements.txt /tmp/requirements.txt
 RUN python3 -m pip install --user --break-system-packages --require-hashes \
         -r /tmp/requirements.txt
 
+# Interactive dev shell, no service to probe.
+HEALTHCHECK NONE
 CMD ["bash"]

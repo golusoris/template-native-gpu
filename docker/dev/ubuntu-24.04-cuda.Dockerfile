@@ -14,9 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git ca-certificates python3 python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+# Non-root by default (rootless-friendly).
+ARG USER=dev
+RUN useradd -ms /bin/bash "$USER"
+USER ${USER}
 WORKDIR /workspace
 
 # Build the matrix example with CUDA enabled:
 #   meson setup build examples/full-gpu-matrix/core -Denable_cuda=true -Denable_nvcc=true
 #   meson compile -C build
+# Interactive dev shell, no service to probe.
+HEALTHCHECK NONE
 CMD ["bash"]

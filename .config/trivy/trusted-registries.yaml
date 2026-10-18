@@ -1,0 +1,4 @@
+# Registries the chart may pull from: docker-publish.yml pushes the project image to ghcr.io.
+ksv0125:
+  trusted_registries:
+    - ghcr.io
