@@ -46,8 +46,9 @@ jobs:
           ALLOWED_SKIPS: ""
           REQUIRED: |
             format + lint
+            workflows (actionlint, pinned actions)
             build + test (ubuntu-26.04)
-            build + test (macos-latest)
+            build + test (macos-26)
             ASan + UBSan
             ThreadSanitizer
             libFuzzer smoke
