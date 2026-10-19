@@ -13,3 +13,5 @@ An app-agnostic chart. The workload kind is chosen by `values.kind`
 - `values.schema.json` validates input — keep it in sync when adding a value.
 - Lint before committing: `helm lint deploy/helm/project` and
   `helm template deploy/helm/project | kubectl apply --dry-run=client -f -`.
+- CI check: `bash scripts/ci/helm-chart-check.sh` validates schemas, vendor
+  GPU resource keys, and strict lint.
