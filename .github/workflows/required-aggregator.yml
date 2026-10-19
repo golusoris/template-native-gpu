@@ -47,6 +47,7 @@ jobs:
           REQUIRED: |
             format + lint
             workflows (actionlint, pinned actions)
+            helm chart (schema + gpu vendor keys)
             build + test (ubuntu-26.04)
             build + test (macos-26)
             ASan + UBSan

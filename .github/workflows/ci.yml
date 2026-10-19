@@ -83,3 +83,20 @@ jobs:
         run: bash scripts/ci/advisory-exceptions_test.sh
       - name: Advisory exceptions hold (osv-scanner.toml)
         run: python3 scripts/ci/advisory-exceptions.py
+
+  helm-chart:
+    name: helm chart (schema + gpu vendor keys)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install helm
+        run: |
+          bash scripts/ci/install-helm.sh "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Chart check refuses its planted cases
+        run: bash scripts/ci/helm-chart-check_test.sh
+      - name: Chart renders valid vendors, refuses unknown
+        run: bash scripts/ci/helm-chart-check.sh
