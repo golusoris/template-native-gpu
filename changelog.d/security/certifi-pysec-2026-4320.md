@@ -1,0 +1,1 @@
+- Lock certifi 2026.10.19 in the dev image so it no longer trusts the compromised emSign roots (PYSEC-2026-4320); only certifi resolves past the lock upload cutoff.
