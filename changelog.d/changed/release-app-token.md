@@ -1,0 +1,1 @@
+- release-please now runs on the release GitHub App token, so its release pull request starts CI and each published release starts `supply-chain.yml` (build provenance, cosign, SBOM).
