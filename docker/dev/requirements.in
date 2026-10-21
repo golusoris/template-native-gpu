@@ -1,7 +1,9 @@
 # Python tools baked into the dev image. Regenerate the lock after an edit;
-# set --exclude-newer to a date at least three days back:
+# set --exclude-newer to a date at least three days back; certifi resolves
+# past it because older releases trust compromised emSign roots (PYSEC-2026-4320):
 #   uv pip compile --generate-hashes --universal --python-version 3.12 \
 #     --exclude-newer 2026-10-08T00:00:00Z \
+#     --exclude-newer-package certifi=2026-10-21T00:00:00Z \
 #     --output-file docker/dev/requirements.txt docker/dev/requirements.in
 pre-commit==4.6.2
 semgrep==1.180.0
