@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "generated_at": "2026-10-22T05:00:07Z",
+  "repository": "golusoris/template-native-gpu",
+  "commit_sha": "4f4f56870b545eef11cf7c03136ecaae161b8feb",
+  "total_infractions": 8,
+  "infractions": [
+    {
+      "rule_id": "HISS-07",
+      "file_path": ".github/workflows/supply-chain.yml",
+      "line_number": 54,
+      "message": "'|| true' discards the command's failure; handle the exit status or test the condition instead",
+      "anchor": "text:e127c3e6af6a",
+      "fingerprint": ".github/workflows/supply-chain.yml:HISS-07:text:e127c3e6af6a#1"
+    },
+    {
+      "rule_id": "HISS-01",
+      "file_path": "examples/full-gpu-matrix/core/src/gpu_dispatch_env.c",
+      "line_number": 71,
+      "message": "Legacy non-DAG control flow jump (goto)",
+      "anchor": "fn:proj_gpu_dispatch_env_get",
+      "fingerprint": "examples/full-gpu-matrix/core/src/gpu_dispatch_env.c:HISS-01:fn:proj_gpu_dispatch_env_get#1"
+    },
+    {
+      "rule_id": "HISS-01",
+      "file_path": "ffmpeg-patches/files/vf_project_vulkan.c",
+      "line_number": 165,
+      "message": "Legacy non-DAG control flow jump (goto)",
+      "anchor": "fn:filter_frame",
+      "fingerprint": "ffmpeg-patches/files/vf_project_vulkan.c:HISS-01:fn:filter_frame#1"
+    },
+    {
+      "rule_id": "HISS-07",
+      "file_path": "ffmpeg-patches/generate.sh",
+      "line_number": 29,
+      "message": "'|| true' discards the command's failure; handle the exit status or test the condition instead",
+      "anchor": "text:e98290fde815",
+      "fingerprint": "ffmpeg-patches/generate.sh:HISS-07:text:e98290fde815#1"
+    },
+    {
+      "rule_id": "HISS-07",
+      "file_path": "ffmpeg-patches/generate.sh",
+      "line_number": 89,
+      "message": "'|| true' discards the command's failure; handle the exit status or test the condition instead",
+      "anchor": "text:27ab2d097ee3",
+      "fingerprint": "ffmpeg-patches/generate.sh:HISS-07:text:27ab2d097ee3#1"
+    },
+    {
+      "rule_id": "HISS-07",
+      "file_path": "ffmpeg-patches/test/build-and-run.sh",
+      "line_number": 34,
+      "message": "'|| true' discards the command's failure; handle the exit status or test the condition instead",
+      "anchor": "text:e98290fde815",
+      "fingerprint": "ffmpeg-patches/test/build-and-run.sh:HISS-07:text:e98290fde815#1"
+    },
+    {
+      "rule_id": "HISS-04",
+      "file_path": "libproject/src/interop.c",
+      "line_number": 87,
+      "symbol": "proj_blob_pack",
+      "message": "Function 'proj_blob_pack' (72 LOC) exceeds HISS-04 / NASA Rule 4 limit of 60 LOC",
+      "anchor": "fn:proj_blob_pack",
+      "fingerprint": "libproject/src/interop.c:HISS-04:fn:proj_blob_pack#1"
+    },
+    {
+      "rule_id": "HISS-04",
+      "file_path": "libproject/src/interop.c",
+      "line_number": 185,
+      "symbol": "proj_blob_find_section",
+      "message": "Function 'proj_blob_find_section' (64 LOC) exceeds HISS-04 / NASA Rule 4 limit of 60 LOC",
+      "anchor": "fn:proj_blob_find_section",
+      "fingerprint": "libproject/src/interop.c:HISS-04:fn:proj_blob_find_section#1"
+    }
+  ]
+}

@@ -10,7 +10,6 @@
       "Bash(ninja:*)",
       "Bash(pkg-config:*)",
       "Bash(make:*)",
-
       "Bash(clang:*)",
       "Bash(gcc:*)",
       "Bash(g++:*)",
@@ -19,7 +18,6 @@
       "Bash(clang-tidy:*)",
       "Bash(cppcheck:*)",
       "Bash(glslangValidator:*)",
-
       "Bash(semgrep:*)",
       "Bash(gitleaks:*)",
       "Bash(trivy:*)",
@@ -27,7 +25,6 @@
       "Bash(codespell:*)",
       "Bash(pre-commit:*)",
       "Bash(release-please:*)",
-
       "Bash(nvidia-smi:*)",
       "Bash(nvcc:*)",
       "Bash(cuda-gdb:*)",
@@ -39,7 +36,6 @@
       "Bash(sycl-ls:*)",
       "Bash(icpx:*)",
       "Bash(xcrun:*)",
-
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -59,7 +55,6 @@
       "Bash(gh run:*)",
       "Bash(gh workflow:*)",
       "Bash(gh issue:*)",
-
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(grep:*)",
@@ -91,21 +86,53 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": ".claude/hooks/block-unsafe-bash.sh" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-unsafe-bash.sh"
+          },
+          {
+            "type": "command",
+            "command": "praetorctl hook claude pre-tool",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/auto-format-on-edit.sh" },
-          { "type": "command", "command": ".claude/hooks/docs-drift-warn.sh" }
+          {
+            "type": "command",
+            "command": ".claude/hooks/auto-format-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/docs-drift-warn.sh"
+          }
         ]
       }
     ],
     "SessionStart": [
-      { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start.sh" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/session-start.sh"
+          }
+        ]
+      }
     ],
-    "Stop": [{ "hooks": [{ "type": "command", "command": ".claude/hooks/stop.sh" }] }]
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/stop.sh"
+          }
+        ]
+      }
+    ]
   }
 }

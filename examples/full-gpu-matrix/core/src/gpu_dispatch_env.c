@@ -6,6 +6,7 @@
  *  variables, each under its own pthread_once / InitOnceExecuteOnce gate.
  *  Adapted from: vmaf/core/src/gpu_dispatch_env.{h,c}.
  */
+// NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp) /* WHY: POSIX feature test macro required for strdup before system headers */
 #define _POSIX_C_SOURCE 200809L /* strdup */
 
 #include "gpu_dispatch_env.h"
@@ -65,20 +66,22 @@ const char *proj_gpu_dispatch_env_get(const char *var_name)
     pthread_mutex_lock(&g_lock);
 #endif
 
+    int found = 0;
     for (i = 0; i < g_slot_count; i++) {
         if (g_slots[i].name == var_name) {
             copy = g_slots[i].value;
-            goto out;
+            found = 1;
+            break;
         }
     }
-    if (g_slot_count < PROJ_ENV_MAX_VARS) {
+    if (!found && g_slot_count < PROJ_ENV_MAX_VARS) {
+        // NOLINTNEXTLINE(concurrency-mt-unsafe) /* WHY: getenv serialized under g_lock mutex */
         raw = getenv(var_name); /* serialised by the lock above */
         g_slots[g_slot_count].name = var_name;
         g_slots[g_slot_count].value = raw ? strdup_compat(raw) : NULL;
         copy = g_slots[g_slot_count].value;
         g_slot_count++;
     }
-out:
 #ifdef _WIN32
     LeaveCriticalSection(&g_lock);
 #else

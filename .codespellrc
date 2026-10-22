@@ -7,7 +7,7 @@
 #
 # Ignore list: real words / GPU-domain acronyms / variable-name fragments that
 # codespell otherwise flags. Extend with your project's vocabulary.
-skip = ./build,./builddir*,./subprojects,*.patch,./CHANGELOG.md,*.spv,*.metallib,*.fatbin,*.hsaco,*.bin,*.yuv,*_ptx.c,*_hsaco.c
+skip = ./build,./builddir*,./subprojects,*.patch,./CHANGELOG.md,*.spv,*.metallib,*.fatbin,*.hsaco,*.bin,*.yuv,*_ptx.c,*_hsaco.c,.config/agent/hooks/block_evasion.py
 ignore-words-list = hsa,nd,fo,padd,iterm,re-use,re-uses,re-used,re-usable
 quiet-level = 3
 check-hidden = true

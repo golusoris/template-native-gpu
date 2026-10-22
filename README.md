@@ -117,3 +117,25 @@ in `.github/`, `SECURITY.md`, `mkdocs.yml`, `deploy/helm/`.
 [`REUSE.toml`](REUSE.toml) maps every file to its licence and `reuse lint`
 verifies it; licence texts are in [`LICENSES/`](LICENSES/). See also
 [NOTICE](NOTICE) and [ADR-0005](docs/adr/0005-eupl-licence.md).
+
+<!-- praetor:readme-governance:start -->
+[![HISS Adopted][praetor-hiss-badge]][praetor-hiss-agents]
+
+Praetor manages this repository's declared governance policy. This managed
+block records adoption state; it is not a verification certificate.
+
+**Verification**: `make verify-all` runs the repository's configured
+verification cascade.
+
+**HISS Audit**: `praetorctl audit` enforces policy, generated-surface
+integrity, and the debt ratchet.
+
+**Context Sync**: `praetorctl compile-context --verify` verifies every
+generated agent context against `AGENTS.md`.
+
+**Debt Baseline**: `.standards-baseline.json` anchors the debt ratchet at
+8 recorded infractions; audit forbids growth.
+
+[praetor-hiss-badge]: https://img.shields.io/badge/Standards-HISS%20Adopted%20(8%20baselined)-yellow
+[praetor-hiss-agents]: https://github.com/golusoris/template-native-gpu/blob/HEAD/AGENTS.md
+<!-- praetor:readme-governance:end -->

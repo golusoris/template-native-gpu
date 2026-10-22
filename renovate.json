@@ -6,14 +6,18 @@
     ":dependencyDashboard",
     ":semanticCommits"
   ],
-  "schedule": ["before 6am on weekdays"],
+  "schedule": [
+    "before 6am on weekdays"
+  ],
   "timezone": "Europe/Vienna",
   "prHourlyLimit": 0,
   "prConcurrentLimit": 10,
   "rangeStrategy": "bump",
   "commitMessagePrefix": "chore(deps):",
   "branchPrefix": "renovate/",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "platformAutomerge": true,
   "osvVulnerabilityAlerts": true,
   "minimumReleaseAge": "3 days",
@@ -21,7 +25,9 @@
     {
       "customType": "regex",
       "description": "Update actionlint and its image digest as one pair.",
-      "managerFilePatterns": ["/^tools/tool-versions\\.env$/"],
+      "managerFilePatterns": [
+        "/^tools/tool-versions\\.env$/"
+      ],
       "matchStrings": [
         "ACTIONLINT_VERSION=(?<currentValue>[^\\s]+)\\nACTIONLINT_IMAGE_DIGEST=(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
@@ -33,7 +39,9 @@
     {
       "customType": "regex",
       "description": "Update zizmor and its image digest as one pair.",
-      "managerFilePatterns": ["/^tools/tool-versions\\.env$/"],
+      "managerFilePatterns": [
+        "/^tools/tool-versions\\.env$/"
+      ],
       "matchStrings": [
         "ZIZMOR_VERSION=(?<currentValue>[^\\s]+)\\nZIZMOR_IMAGE_DIGEST=(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
@@ -43,29 +51,55 @@
       "autoReplaceStringTemplate": "ZIZMOR_VERSION={{{newValue}}}\\nZIZMOR_IMAGE_DIGEST={{{newDigest}}}"
     }
   ],
-  "ignorePaths": ["subprojects/**", "build/**", "builddir*/**"],
+  "ignorePaths": [
+    "subprojects/**",
+    "build/**",
+    "builddir*/**"
+  ],
   "packageRules": [
     {
       "description": "Group GitHub Actions minor+patch+digest bumps; auto-merge — digest-only is mechanical and CI catches drift.",
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
       "groupName": "GitHub Actions (minor + patch)",
       "automerge": true,
       "automergeType": "pr",
-      "schedule": ["before 6am on Monday"]
+      "schedule": [
+        "before 6am on Monday"
+      ]
     },
     {
       "description": "Major Action upgrades require human review — breaking changes possible.",
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "groupName": "GitHub Actions (major)",
       "automerge": false
     },
     {
       "description": "Group pre-commit hook rev bumps; auto-merge — mechanical, lint catches drift.",
-      "matchManagers": ["pre-commit"],
+      "matchManagers": [
+        "pre-commit"
+      ],
       "groupName": "pre-commit hooks",
       "automerge": true
+    },
+    {
+      "description": "praetor-managed files: praetorctl adopt ships their updates and praetorctl audit locks them byte for byte",
+      "matchFileNames": [
+        ".github/workflows/reuse.yml",
+        ".config/reuse/requirements.txt"
+      ],
+      "enabled": false
     }
   ]
 }

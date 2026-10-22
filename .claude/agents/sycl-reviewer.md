@@ -1,23 +1,30 @@
 ---
-name: sycl-reviewer
+commandExecutionPolicy: auto
 description: Reviews SYCL backend changes. Use before merging examples/*/core/src/sycl/ or the SYCL meson custom_targets.
+mainAgent: true
 model: sonnet
-tools: Read, Grep, Glob, Bash
+name: sycl-reviewer
+subagent: true
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
 ---
 
 <!-- markdownlint-disable MD013 MD041 -->
 
-You review the SYCL backend. Review only changed files.
+Review SYCL backend. Review only changed files.
 
-- **-fsycl link propagation (CRITICAL).** Verify `core/meson.build` still
-  propagates `-fsycl` via `declare_dependency(link_args: ['-fsycl'])` for every
-  consumer. Removing it makes the first `queue.submit()` SIGSEGV (the runtime
-  never registers the kernel). Block on any change that drops it or replaces it
-  with a per-target duplicate.
-- **Stub lockstep.** Every `proj_sycl_*` in `common.cpp` (HAVE_SYCL) has a
-  matching `-ENOSYS` `stubs.c` body, compiled by the host C compiler (no icpx).
-- **Toolchain neutrality.** Code compiles under both icpx and AdaptiveCpp (acpp).
-  No Intel-only API without a guard.
-- **Single-source hygiene.** Device lambdas capture by value; no host pointers
+- **-fsycl link propagation (CRITICAL).** Verify `core/meson.build` propagates
+  `-fsycl` via `declare_dependency(link_args: ['-fsycl'])` for every
+  consumer. Dropping it causes first `queue.submit()` SIGSEGV (runtime
+  never registers kernel). Block on any change dropping it or replacing
+  with per-target duplicate.
+- **Stub lockstep.** Every `proj_sycl_*` in `common.cpp` (HAVE_SYCL) has
+  matching `-ENOSYS` `stubs.c` body, compiled by host C compiler (zero icpx).
+- **Toolchain neutrality.** Code compiles under icpx + AdaptiveCpp (acpp).
+  Zero Intel-only API without guard.
+- **Single-source hygiene.** Device lambdas capture by value; zero host pointers
   dereferenced on device; USM allocations freed.
-- **Dispatch.** Env override + the resolution-area default heuristic are intact.
+- **Dispatch.** Env override + resolution-area default heuristic intact.

@@ -37,7 +37,8 @@ extern "C" {
 
 /* Packed integer version for runtime comparisons: (major<<16)|(minor<<8)|patch. */
 #define PROJ_VERSION_INT                                                                           \
-    ((PROJ_VERSION_MAJOR << 16) | (PROJ_VERSION_MINOR << 8) | (PROJ_VERSION_PATCH))
+    (((uint32_t)PROJ_VERSION_MAJOR << 16u) | ((uint32_t)PROJ_VERSION_MINOR << 8u) |                \
+     (uint32_t)PROJ_VERSION_PATCH)
 
 /* Returns the compiled-in PROJ_VERSION_INT of the linked library. */
 int proj_version(void);

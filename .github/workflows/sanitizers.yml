@@ -28,7 +28,7 @@ jobs:
           CC: clang
           CXX: clang++
         run: |
-          meson setup build -Db_sanitize=address,undefined -Db_lundef=false
+          meson setup --werror build -Db_sanitize=address,undefined -Db_lundef=false
           meson compile -C build
           meson test -C build --print-errorlogs
 
@@ -45,7 +45,7 @@ jobs:
       - name: Build + test (thread)
         env: { CC: clang, CXX: clang++ }
         run: |
-          meson setup build examples/full-gpu-matrix/core -Db_sanitize=thread -Db_lundef=false
+          meson setup --werror build examples/full-gpu-matrix/core -Db_sanitize=thread -Db_lundef=false
           meson compile -C build
           meson test -C build --print-errorlogs
 
@@ -62,7 +62,7 @@ jobs:
       - name: Build fuzz targets
         env: { CC: clang, CXX: clang++ }
         run: |
-          meson setup build examples/full-gpu-matrix/core
+          meson setup --werror build examples/full-gpu-matrix/core
           meson compile -C build
       - name: Run fuzz target (60s smoke)
         run: |

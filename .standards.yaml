@@ -1,0 +1,99 @@
+---
+version: 1
+repository:
+  owner: golusoris
+  name: template-native-gpu
+  visibility: ""
+  description: ""
+  homepage: ""
+  topics: []
+adoption:
+  decline:
+    # The repository's own toolchain images (docker/dev/*.Dockerfile) carry the GPU SDKs the generated bundle lacks.
+    - dev-container
+profiles:
+  - native-gpu-systems
+facets:
+  - security:high
+  - agent:sandboxed
+register:
+  sources:
+    expected: 13
+    sha256:
+      sha256:ca38d7be8852847d9325ad2f9c045b4db495d8f656f5edcd90c0cbf8c960b9fe
+    inputs:
+      - path: .paperclip/harness.json
+        surface: prompts
+        kind: message
+        format: json
+        selector: operating_contract.*
+      - path: .paperclip/harness.json
+        surface: prompts
+        kind: message
+        format: json
+        selector: invariants.*
+clang_tidy:
+  lanes:
+    - name: cpu
+      compile_database: build/compile_commands.json
+    - name: gpu-example-cpu
+      compile_database: build-gpu/compile_commands.json
+exceptions:
+  - rule: HISS-11
+    path: .github/workflows/docker-publish.yml
+    reason: adoption found the release workflows short of the declared supply chain (SLSA Build Level 3 declared, Level 2 measured); raise them as docs/guides/releasing.md in Praetor describes, then remove this entry
+    expires: "2027-01-20"
+  - rule: codespell
+    path: .config/agent/hooks/block_evasion.py
+    category: C
+    entered: "2026-10-22"
+    reason: "category C: the emitted hook splits one word across two regex literals and codespell flags the first half; remove once the engine emits the pattern whole"
+    expires: "2026-11-01"
+  - rule: declared-linters
+    tool: cppcheck
+    reason: adoption scaffolds no CI job for cppcheck declared by profile "native-gpu-systems"; run it in a workflow, or remove this entry
+    expires: "2027-01-20"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/cuda/common.c
+    reason: "category C: missing CUDA toolchain lane (enable_cuda)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/cuda/dispatch_strategy.c
+    reason: "category C: missing CUDA toolchain lane (enable_cuda)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/cuda/scale_kernel.cu
+    reason: "category C: missing CUDA toolchain lane (nvcc)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/hip/common.c
+    reason: "category C: missing HIP toolchain lane (enable_hip)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/hip/dispatch_strategy.c
+    reason: "category C: missing HIP toolchain lane (enable_hip)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/hip/scale_kernel.hip
+    reason: "category C: missing HIP toolchain lane (hipcc)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/metal/dispatch_strategy.c
+    reason: "category C: missing Metal toolchain lane (enable_metal)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/sycl/common.cpp
+    reason: "category C: missing SYCL toolchain lane (enable_sycl)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/src/sycl/dispatch_strategy.cpp
+    reason: "category C: missing SYCL toolchain lane (enable_sycl)"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: examples/full-gpu-matrix/core/test/fuzz/fuzz_dispatch_parse.c
+    reason: "category C: missing libFuzzer fuzzing toolchain lane"
+    expires: "2026-11-01"
+  - rule: clang-tidy-coverage
+    path: ffmpeg-patches/files/vf_project_vulkan.c
+    reason: "category C: missing FFmpeg Vulkan filter build lane"
+    expires: "2026-11-01"

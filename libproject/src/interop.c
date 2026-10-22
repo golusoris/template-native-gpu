@@ -82,6 +82,21 @@ static void write_pack_header(ProjSideData *hdr, const ProjSideData *meta, uint3
     hdr->producer_id = meta->producer_id;
 }
 
+static void write_pack_payloads(uint8_t *blob, uint32_t header_size,
+                                const ProjPackSection *sections, int nb, uint32_t cursor)
+{
+    ProjSectionDir *dir = (ProjSectionDir *)(void *)(blob + PROJ_SIDEDATA_UUID_LEN + header_size);
+    int i;
+    for (i = 0; i < nb; i++) {
+        dir[i].section_id = (uint32_t)sections[i].id;
+        dir[i].offset = cursor; /* relative to magic[0] */
+        dir[i].size = sections[i].size;
+        dir[i].struct_minor = (uint32_t)PROJ_ABI_MINOR;
+        memcpy(blob + PROJ_SIDEDATA_UUID_LEN + cursor, sections[i].data, sections[i].size);
+        cursor += PROJ_ALIGN8(sections[i].size);
+    }
+}
+
 proj_result proj_blob_pack(const ProjSideData *meta, const ProjPackSection *sections, int nb,
                            uint8_t **out_blob, size_t *out_len)
 {
@@ -93,39 +108,30 @@ proj_result proj_blob_pack(const ProjSideData *meta, const ProjPackSection *sect
     size_t blob_len;
     uint8_t *blob;
     ProjSideData *hdr;
-    ProjSectionDir *dir;
     int i;
+    proj_result rc;
 
-    if (meta == NULL || out_blob == NULL || out_len == NULL) {
-        return PROJ_ERR_INVALID;
-    }
-    if (nb < 0 || (nb > 0 && sections == NULL)) {
+    if (meta == NULL || out_blob == NULL || out_len == NULL || nb < 0 ||
+        (nb > 0 && sections == NULL)) {
         return PROJ_ERR_INVALID;
     }
     if (nb > 32) { /* at most one entry per possible section bit */
         return PROJ_ERR_RANGE;
     }
 
-    {
-        proj_result rc = validate_pack_sections(sections, nb, &section_mask);
-        if (rc != PROJ_OK) {
-            return rc;
-        }
+    rc = validate_pack_sections(sections, nb, &section_mask);
+    if (rc != PROJ_OK) {
+        return rc;
     }
 
     /* Layout: header, dir[], then 8-aligned section payloads. */
     cursor = PROJ_ALIGN8(header_size + (uint32_t)nb * dir_size);
-
     *out_blob = NULL;
     *out_len = 0;
 
-    /* total bytes of all (aligned) section payloads */
-    {
-        uint32_t payload = 0;
-        for (i = 0; i < nb; i++) {
-            payload += PROJ_ALIGN8(sections[i].size);
-        }
-        total_size = cursor + payload;
+    total_size = cursor;
+    for (i = 0; i < nb; i++) {
+        total_size += PROJ_ALIGN8(sections[i].size);
     }
 
     blob_len = (size_t)PROJ_SIDEDATA_UUID_LEN + (size_t)total_size;
@@ -142,15 +148,7 @@ proj_result proj_blob_pack(const ProjSideData *meta, const ProjPackSection *sect
     write_pack_header(hdr, meta, total_size, section_mask, nb);
 
     /* Directory + payloads. */
-    dir = (ProjSectionDir *)(void *)(blob + PROJ_SIDEDATA_UUID_LEN + header_size);
-    for (i = 0; i < nb; i++) {
-        dir[i].section_id = (uint32_t)sections[i].id;
-        dir[i].offset = cursor; /* relative to magic[0] */
-        dir[i].size = sections[i].size;
-        dir[i].struct_minor = (uint32_t)PROJ_ABI_MINOR;
-        memcpy(blob + PROJ_SIDEDATA_UUID_LEN + cursor, sections[i].data, sections[i].size);
-        cursor += PROJ_ALIGN8(sections[i].size);
-    }
+    write_pack_payloads(blob, header_size, sections, nb, cursor);
 
     *out_blob = blob;
     *out_len = blob_len;
@@ -198,10 +196,8 @@ proj_result proj_blob_find_section(const uint8_t *blob, size_t len, enum proj_se
     if (blob == NULL || out_ptr == NULL || out_size == NULL) {
         return PROJ_ERR_INVALID;
     }
-    if (len < (size_t)PROJ_SIDEDATA_UUID_LEN + sizeof(ProjSideData)) {
-        return PROJ_ERR_ABSENT;
-    }
-    if (memcmp(blob, proj_sidedata_uuid, PROJ_SIDEDATA_UUID_LEN) != 0) {
+    if (len < (size_t)PROJ_SIDEDATA_UUID_LEN + sizeof(ProjSideData) ||
+        memcmp(blob, proj_sidedata_uuid, PROJ_SIDEDATA_UUID_LEN) != 0) {
         return PROJ_ERR_ABSENT;
     }
 
@@ -216,11 +212,9 @@ proj_result proj_blob_find_section(const uint8_t *blob, size_t len, enum proj_se
         return PROJ_ERR_ABI; /* consumer cannot trust the layout (R6) */
     }
     /* Framing sanity: declared size must fit, dir[] must fit. */
-    if (hdr->total_size > image_len || hdr->header_size < sizeof(*hdr)) {
-        return PROJ_ERR_TRUNCATED;
-    }
-    if ((size_t)hdr->header_size + (size_t)hdr->section_count * sizeof(ProjSectionDir) >
-        image_len) {
+    if (hdr->total_size > image_len || hdr->header_size < sizeof(*hdr) ||
+        (size_t)hdr->header_size + (size_t)hdr->section_count * sizeof(ProjSectionDir) >
+            image_len) {
         return PROJ_ERR_TRUNCATED;
     }
     if ((hdr->section_mask & (uint32_t)sec) == 0) {

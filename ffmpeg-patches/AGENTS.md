@@ -1,19 +1,19 @@
 # ffmpeg-patches — agent guide
 
-The patch stack is **generated**, not hand-edited. `files/` is the source of
-truth; `*.patch` are artifacts of `generate.sh`.
+Patch stack = **generated**, zero hand-edits. `files/` = source of
+truth; `*.patch` = artifacts of `generate.sh`.
 
 Rules:
 
-- Edit a filter in `files/vf_<name>_vulkan.c`, then rerun `./generate.sh` and
-  commit BOTH the source and the regenerated patch in one change.
-- The stack is **cumulative**. Validate with a full series replay
+- Edit filter in `files/vf_<name>_vulkan.c`, rerun `./generate.sh`,
+  commit BOTH source and regenerated patch in one change.
+- Stack = **cumulative**. Validate with full series replay
   (`test/build-and-run.sh`), never per-patch `git apply --check`.
-- Each filter links `libproject` via `require_pkg_config` (the idiomatic FFmpeg
-  pattern). `libproject` must NOT appear in `*_filter_deps` — an unknown dep
-  silently disables the filter. Gate it via the `enabled <filter> &&
-  require_pkg_config` line instead.
-- New filter source files carry FFmpeg's **LGPL-2.1** header (they become part
-  of FFmpeg when applied), not the project's EUPL-1.2 header.
-- Keep the GLSL in the filter and the standalone reference shader
-  (`libproject/shaders/`) in lockstep.
+- Each filter links `libproject` via `require_pkg_config` (idiomatic FFmpeg
+  pattern). `libproject` must NOT appear in `*_filter_deps` — unknown dep
+  silently disables filter. Gate via `enabled <filter> && require_pkg_config`
+  line instead.
+- New filter source files carry FFmpeg **LGPL-2.1** header (part of FFmpeg
+  when applied), not project EUPL-1.2 header.
+- Keep GLSL in filter and standalone reference shader (`libproject/shaders/`)
+  in lockstep.

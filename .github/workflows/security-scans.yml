@@ -37,7 +37,7 @@ jobs:
           config-file: ./.github/codeql-config.yml
       - name: Build for CodeQL
         run: |
-          meson setup build
+          meson setup --werror build
           meson compile -C build
       - uses: github/codeql-action/analyze@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
 
