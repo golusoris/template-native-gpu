@@ -1,0 +1,2 @@
+# clang-tidy for the CI clang-tidy job; compile with the command in requirements.txt.
+clang-tidy==23.1.3
