@@ -1,0 +1,9 @@
+# Findings with no fix reachable from our locks. Each entry expires; Trivy reports the finding again after that date.
+vulnerabilities:
+  - id: CVE-2026-59951
+    paths:
+      - docker/dev/requirements.txt
+    purls:
+      - pkg:pypi/mcp@1.29.0
+    expired_at: 2026-11-01
+    statement: "category C, entered 2026-10-22: semgrep 1.180.0 through 1.182.1 pin mcp==1.29.0 (fixed in 1.30.0); semgrep runs as a CLI and starts no streamable HTTP MCP server. Remove once a semgrep release allows mcp>=1.30.0."
