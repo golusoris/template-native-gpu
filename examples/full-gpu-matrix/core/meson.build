@@ -341,6 +341,8 @@ libproject_gpu = library(
   include_directories: core_inc,
   c_args: core_cflags,
   cpp_args: core_cflags,
+  # common.m needs HAVE_METAL too, else it compiles to an empty unit.
+  objc_args: core_cflags,
   dependencies: backend_deps,
   version: meson.project_version(),
   soversion: '0',
