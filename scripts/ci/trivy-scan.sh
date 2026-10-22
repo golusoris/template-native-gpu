@@ -44,4 +44,5 @@ image="${SCAN_IMAGE_REGISTRY:-mirror.gcr.io}/aquasec/trivy:${TRIVY_VERSION}@${TR
 "${DOCKER_BIN:-docker}" run --rm \
   -v "$repo_root:/src:ro" -v "$out_dir:/out" -w /src \
   "$image" fs --scanners vuln,secret,misconfig --config-data .config/trivy \
+  --ignorefile .trivyignore.yaml \
   --format sarif --output "/out/$out_name" --skip-version-check .
