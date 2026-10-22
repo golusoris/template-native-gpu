@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The PROJECT Authors
+# SPDX-License-Identifier: EUPL-1.2
+
+# libproject is C only: bugprone-casting-through-void suggests reinterpret_cast, which C lacks
+# (clang-tidy 23 restricts the check to C++).
+InheritParentConfig: true
+Checks: -bugprone-casting-through-void
