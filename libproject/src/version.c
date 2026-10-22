@@ -13,7 +13,7 @@
 
 int proj_version(void)
 {
-    return PROJ_VERSION_INT;
+    return (int)PROJ_VERSION_INT;
 }
 
 const char *proj_version_string(void)

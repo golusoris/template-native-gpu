@@ -5,6 +5,7 @@
  *  Backend-agnostic dispatch tests. No GPU required — these exercise the env
  *  parser, the once-snapshot, and the round-robin picture pool.
  */
+// NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp) /* WHY: POSIX feature test macro required for setenv before system headers */
 #define _POSIX_C_SOURCE 200809L /* setenv */
 
 #include "../src/gpu_dispatch_env.h"
@@ -45,9 +46,11 @@ static void test_parse(void)
 static void test_env_snapshot(void)
 {
     /* The snapshot is once-only; setenv after the first read is not observed. */
+    // NOLINTNEXTLINE(concurrency-mt-unsafe) /* WHY: single-threaded unit test setup */
     setenv("PROJ_TEST_DISPATCH", "vif:graph", 1);
     const char *a = proj_gpu_dispatch_env_get("PROJ_TEST_DISPATCH");
     assert(a != NULL && strcmp(a, "vif:graph") == 0);
+    // NOLINTNEXTLINE(concurrency-mt-unsafe) /* WHY: single-threaded unit test setup */
     setenv("PROJ_TEST_DISPATCH", "vif:direct", 1);
     const char *b = proj_gpu_dispatch_env_get("PROJ_TEST_DISPATCH");
     assert(b == a); /* same cached pointer; later setenv ignored by design */

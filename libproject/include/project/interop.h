@@ -90,7 +90,8 @@ enum proj_section {
 
 /* fourcc of the writing stage, for diagnostics (e.g. 'PROJ'). */
 #define PROJ_FOURCC(a, b, c, d)                                                                    \
-    ((uint32_t)(a) | ((uint32_t)(b) << 8) | ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
+    ((uint32_t)(uint8_t)(a) | ((uint32_t)(uint8_t)(b) << 8u) | ((uint32_t)(uint8_t)(c) << 16u) |   \
+     ((uint32_t)(uint8_t)(d) << 24u))
 
 /* ---- Blob framing ------------------------------------------------------- */
 

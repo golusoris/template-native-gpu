@@ -62,7 +62,13 @@ static void test_pack_find_roundtrip(void)
     rc = proj_blob_find_section(blob, len, PROJ_SEC_SUMMARY, sizeof(sum), &out, &out_sz);
     assert(rc == PROJ_OK);
     assert(out_sz == sizeof(sum));
-    assert(memcmp(out, &sum, sizeof(sum)) == 0);
+    {
+        const ProjSummarySection *got_sum = (const ProjSummarySection *)out;
+        assert(got_sum->metric_a == sum.metric_a);
+        assert(got_sum->metric_b == sum.metric_b);
+        assert(got_sum->flags == sum.flags);
+        assert(got_sum->_pad0 == sum._pad0);
+    }
 
     /* R3: a section bit that was never packed is ABSENT. */
     rc = proj_blob_find_section(blob, len, PROJ_SEC_MAP, sizeof(ProjMapSection), &out, &out_sz);

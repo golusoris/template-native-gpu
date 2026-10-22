@@ -33,6 +33,7 @@ void proj_metal_state_free(ProjMetalState **state)
     }
 }
 
+// NOLINTNEXTLINE(readability-non-const-parameter) /* WHY: stub signature must match common.h (data modified in-place when backend enabled) */
 int proj_metal_scale(ProjMetalState *st, float *data, size_t n, float scale)
 {
     (void)st;

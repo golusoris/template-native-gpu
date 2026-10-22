@@ -12,3 +12,8 @@
 *_ptx.c linguist-generated=true
 *_hsaco.c linguist-generated=true
 CHANGELOG.md linguist-generated=true
+
+# BEGIN praetor managed attributes (praetorctl adopt)
+# praetorctl audit hashes these files; keep their checkout bytes the same on every platform.
+.devcontainer/Dockerfile.praetor text eol=lf
+# END praetor managed attributes

@@ -46,12 +46,13 @@ jobs:
           sudo apt-get install -y meson ninja-build pkg-config glslang-tools
       - name: Build (release)
         run: |
-          meson setup build --buildtype=release
+          meson setup --werror build --buildtype=release
           meson compile -C build
       - name: Stage artifacts
         run: |
           mkdir -p artifacts
-          cp build/libproject/libproject.so* artifacts/ 2>/dev/null || true
+          for f in build/libproject/libproject.so*; do [ -d "$f" ] || cp "$f" artifacts/; done
+          ls artifacts/libproject.so.*
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:

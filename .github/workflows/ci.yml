@@ -54,16 +54,32 @@ jobs:
         run: brew install meson ninja pkg-config glslang
       - name: Configure + build (minimal seed)
         run: |
-          meson setup build
+          meson setup --werror build
           meson compile -C build
       - name: Test (minimal seed)
         run: meson test -C build --print-errorlogs
       - name: Configure + build (full-gpu-matrix example, all backends stubbed)
         run: |
-          meson setup build-gpu examples/full-gpu-matrix/core
+          meson setup --werror build-gpu examples/full-gpu-matrix/core
           meson compile -C build-gpu
       - name: Test (full-gpu-matrix example)
         run: meson test -C build-gpu --print-errorlogs
+      - name: Set up Go for praetorctl (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.3"
+          cache: false
+      - name: clang-tidy and translation-unit coverage (Linux)
+        if: runner.os == 'Linux'
+        env:
+          # Praetor engine commit whose clang-tidy coverage gate this job runs.
+          PRAETOR_REF: 36b925ee8ede83709dd24d6093e60d3fe9642ed3
+        run: |
+          sudo apt-get install -y clang-tidy
+          python3 scripts/ci/clang-tidy/run.py build build-gpu
+          GOBIN="$RUNNER_TEMP/bin" go install "github.com/cordanaLLM/praetor/cmd/standardsctl@$PRAETOR_REF"
+          "$RUNNER_TEMP/bin/standardsctl" ci tidy-coverage --dir=.
 
   format-lint:
     name: format + lint
