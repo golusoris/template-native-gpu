@@ -28,11 +28,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void pack_summary(const ProjSideData *meta, const ProjSummarySection *sum, uint8_t **blob,
+                         size_t *len)
+{
+    ProjPackSection sec;
+    proj_result rc;
+
+    sec.id = PROJ_SEC_SUMMARY;
+    sec.data = sum;
+    sec.size = (uint32_t)sizeof(*sum);
+
+    rc = proj_blob_pack(meta, &sec, 1, blob, len);
+    assert(rc == PROJ_OK);
+    assert(*blob != NULL && *len > 0);
+}
+
 static void test_pack_find_roundtrip(void)
 {
     ProjSideData meta;
     ProjSummarySection sum;
-    ProjPackSection sec;
     uint8_t *blob = NULL;
     size_t len = 0;
     const void *out = NULL;
@@ -50,13 +64,7 @@ static void test_pack_find_roundtrip(void)
     sum.metric_b = 0.25f;
     sum.flags = 1u;
 
-    sec.id = PROJ_SEC_SUMMARY;
-    sec.data = &sum;
-    sec.size = (uint32_t)sizeof(sum);
-
-    rc = proj_blob_pack(&meta, &sec, 1, &blob, &len);
-    assert(rc == PROJ_OK);
-    assert(blob != NULL && len > 0);
+    pack_summary(&meta, &sum, &blob, &len);
     assert(proj_blob_is_present(blob, len) == 1);
 
     rc = proj_blob_find_section(blob, len, PROJ_SEC_SUMMARY, sizeof(sum), &out, &out_sz);
@@ -83,7 +91,6 @@ static void test_r4_forward_compat(void)
      * its known size, never the producer's larger tail. */
     ProjSideData meta;
     ProjSummarySection sum;
-    ProjPackSection sec;
     uint8_t *blob = NULL;
     size_t len = 0;
     const void *out = NULL;
@@ -95,12 +102,7 @@ static void test_r4_forward_compat(void)
     memset(&sum, 0, sizeof(sum));
     sum.metric_a = 1.0f;
 
-    sec.id = PROJ_SEC_SUMMARY;
-    sec.data = &sum;
-    sec.size = (uint32_t)sizeof(sum);
-
-    rc = proj_blob_pack(&meta, &sec, 1, &blob, &len);
-    assert(rc == PROJ_OK);
+    pack_summary(&meta, &sum, &blob, &len);
 
     rc = proj_blob_find_section(blob, len, PROJ_SEC_SUMMARY, older_known, &out, &out_sz);
     assert(rc == PROJ_OK);

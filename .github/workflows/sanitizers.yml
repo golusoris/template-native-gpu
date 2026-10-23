@@ -19,10 +19,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y meson ninja-build pkg-config clang glslang-tools
+      - uses: ./.github/actions/install-meson-deps
       - name: Build + test (address,undefined)
         env:
           CC: clang
@@ -38,10 +35,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y meson ninja-build pkg-config clang glslang-tools
+      - uses: ./.github/actions/install-meson-deps
       - name: Build + test (thread)
         env: { CC: clang, CXX: clang++ }
         run: |
@@ -55,10 +49,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y meson ninja-build pkg-config clang glslang-tools
+      - uses: ./.github/actions/install-meson-deps
       - name: Build fuzz targets
         env: { CC: clang, CXX: clang++ }
         run: |
