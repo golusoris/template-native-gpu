@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 The PROJECT Authors
+# SPDX-License-Identifier: EUPL-1.2
+
+name: Install Meson deps
+description: Install meson, ninja, clang, and related build tools via apt
+runs:
+  using: composite
+  steps:
+    - name: Install deps
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y meson ninja-build pkg-config clang glslang-tools
