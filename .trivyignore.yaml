@@ -7,3 +7,10 @@ vulnerabilities:
       - pkg:pypi/mcp@1.29.0
     expired_at: 2026-11-01
     statement: "category C, entered 2026-10-22: semgrep 1.180.0 through 1.182.1 pin mcp==1.29.0 (fixed in 1.30.0); semgrep runs as a CLI and starts no streamable HTTP MCP server. Remove once a semgrep release allows mcp>=1.30.0."
+  - id: CVE-2026-114603
+    paths:
+      - docker/dev/requirements.txt
+    purls:
+      - pkg:pypi/opentelemetry-api@1.37.0
+    expired_at: 2026-11-02
+    statement: "category C, entered 2026-10-23: semgrep 1.180.0 through 1.182.1 pin opentelemetry-api~=1.37.0 (fixed in 1.45.1); the semgrep CLI extracts trace context from a traceparent-only carrier and never parses a tracestate header. Remove once a semgrep release allows opentelemetry-api>=1.45.1."

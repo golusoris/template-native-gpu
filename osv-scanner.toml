@@ -11,3 +11,8 @@
 id = "CVE-2026-59951"
 ignoreUntil = 2026-10-28T00:00:00Z
 reason = "Category C (10 days), entered 2026-10-19. mcp 1.29.0 in docker/dev/requirements.txt comes in only through semgrep, whose releases up to 1.181.0 pin mcp==1.29.0 exactly; the fix is mcp 1.30.0. The flaw is unbounded session state in stateful Streamable HTTP servers; the dev image runs the semgrep CLI and serves no MCP HTTP endpoint, so the path is unreachable. No override: pip refuses the lock against semgrep's exact pin. Fix: Renovate bumps semgrep once it allows mcp>=1.30.0 (upstream https://github.com/semgrep/semgrep/issues/11992), which closes code-scanning alerts 18 and 19; then delete this entry."
+
+[[IgnoredVulns]]
+id = "CVE-2026-114603"
+ignoreUntil = 2026-11-02T00:00:00Z
+reason = "Category C (10 days), entered 2026-10-23. opentelemetry-api 1.37.0 in docker/dev/requirements.txt comes in only through semgrep, whose releases up to 1.182.1 pin opentelemetry-api~=1.37.0; the fix is 1.45.1 (GHSA-xcq7-p3pf-p88h). The flaw is unbounded tracestate parsing; the semgrep CLI builds its trace carrier from a traceparent header only (semgrep/telemetry.py extract), so no tracestate reaches the parser. No override: pip refuses the lock against semgrep's pin. Fix: Renovate bumps semgrep once it allows opentelemetry-api>=1.45.1, which closes code-scanning alert 24; then delete this entry."
