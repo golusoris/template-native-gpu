@@ -1,13 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
+    "github>plurano/horistes",
     "config:best-practices",
     "helpers:pinGitHubActionDigests",
-    ":dependencyDashboard",
     ":semanticCommits"
   ],
   "schedule": [
-    "before 6am on weekdays"
+    "before 6am every weekday"
   ],
   "timezone": "Europe/Vienna",
   "prHourlyLimit": 0,
@@ -18,9 +18,6 @@
   "labels": [
     "dependencies"
   ],
-  "platformAutomerge": true,
-  "osvVulnerabilityAlerts": true,
-  "minimumReleaseAge": "3 days",
   "customManagers": [
     {
       "customType": "regex",
@@ -58,7 +55,7 @@
   ],
   "packageRules": [
     {
-      "description": "Group GitHub Actions minor+patch+digest bumps; auto-merge — digest-only is mechanical and CI catches drift.",
+      "description": "Group GitHub Actions minor+patch+digest bumps; digest-only is mechanical and CI catches drift.",
       "matchManagers": [
         "github-actions"
       ],
@@ -68,8 +65,6 @@
         "digest"
       ],
       "groupName": "GitHub Actions (minor + patch)",
-      "automerge": true,
-      "automergeType": "pr",
       "schedule": [
         "before 6am on Monday"
       ]
@@ -82,16 +77,14 @@
       "matchUpdateTypes": [
         "major"
       ],
-      "groupName": "GitHub Actions (major)",
-      "automerge": false
+      "groupName": "GitHub Actions (major)"
     },
     {
-      "description": "Group pre-commit hook rev bumps; auto-merge — mechanical, lint catches drift.",
+      "description": "Group pre-commit hook rev bumps; mechanical, lint catches drift.",
       "matchManagers": [
         "pre-commit"
       ],
-      "groupName": "pre-commit hooks",
-      "automerge": true
+      "groupName": "pre-commit hooks"
     },
     {
       "description": "praetor-managed files: praetorctl adopt ships their updates and praetorctl audit locks them byte for byte",
