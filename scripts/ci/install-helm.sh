@@ -27,8 +27,10 @@ readonly install_dir
 
 # shellcheck source=/dev/null
 . "$repo_root/tools/tool-versions.env"
-# shellcheck source=scripts/ci/lib/verified-download.sh disable=SC1091
-. "$repo_root/scripts/ci/lib/verified-download.sh"
+
+# Sourced from plurano/horistes actions/verified-download; the workflow step passes its path.
+# shellcheck source=/dev/null
+. "${VERIFIED_DOWNLOAD_LIB:?set VERIFIED_DOWNLOAD_LIB from plurano/horistes actions/verified-download}"
 
 if [[ ! "$HELM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   printf 'invalid HELM_VERSION: %s\n' "$HELM_VERSION" >&2
