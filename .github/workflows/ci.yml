@@ -119,7 +119,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - id: verified-download
+        uses: plurano/horistes/actions/verified-download@962524ee8f56e372c3d6c46bcafaf956d7cc44a5
       - name: Install helm
+        env:
+          VERIFIED_DOWNLOAD_LIB: ${{ steps.verified-download.outputs.lib }}
         run: |
           bash scripts/ci/install-helm.sh "$RUNNER_TEMP/bin"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"

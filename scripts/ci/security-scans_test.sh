@@ -5,15 +5,15 @@
 # accept. gitleaks-scan needs the pinned gitleaks on PATH.
 #
 # Usage:
-#   scripts/ci/security-scans_test.sh semgrep|gitleaks-install|gitleaks-scan
+#   scripts/ci/security-scans_test.sh semgrep|gitleaks-scan
 
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 readonly repo_root
 
-if (($# != 1)) || [[ ! "$1" =~ ^(semgrep|gitleaks-install|gitleaks-scan)$ ]]; then
-  printf 'usage: %s semgrep|gitleaks-install|gitleaks-scan\n' "${0##*/}" >&2
+if (($# != 1)) || [[ ! "$1" =~ ^(semgrep|gitleaks-scan)$ ]]; then
+  printf 'usage: %s semgrep|gitleaks-scan\n' "${0##*/}" >&2
   exit 2
 fi
 mode="$1"
@@ -55,26 +55,6 @@ EOF
     expect_failure 'no-system-rand' "$repo_root/scripts/ci/semgrep-scan.sh" "$test_dir/planted"
     "$repo_root/scripts/ci/semgrep-scan.sh" "$test_dir/clean"
     printf 'semgrep scan policy tests passed\n'
-    ;;
-  gitleaks-install)
-    fake_root="$work_dir/fake_repo"
-    mkdir -p "$fake_root"
-    cp -R "$repo_root/scripts" "$fake_root/"
-    cp -R "$repo_root/tools" "$fake_root/"
-    install_dir="$work_dir/install"
-
-    sed -i 's/^GITLEAKS_LINUX_X64_SHA256=.*/GITLEAKS_LINUX_X64_SHA256=0000000000000000000000000000000000000000000000000000000000000000/' \
-      "$fake_root/tools/tool-versions.env"
-    expect_failure 'archive digest mismatch' "$fake_root/scripts/ci/install-gitleaks.sh" "$install_dir"
-    if [[ -e "$install_dir/gitleaks" ]]; then
-      printf 'expected %s/gitleaks to not exist after digest mismatch\n' "$install_dir" >&2
-      exit 1
-    fi
-
-    sed -i 's/^GITLEAKS_LINUX_X64_SHA256=.*/GITLEAKS_LINUX_X64_SHA256=nothex/' \
-      "$fake_root/tools/tool-versions.env"
-    expect_failure 'invalid pinned gitleaks digest' "$fake_root/scripts/ci/install-gitleaks.sh" "$install_dir"
-    printf 'gitleaks installer policy tests passed\n'
     ;;
   gitleaks-scan)
     mkdir -p "$work_dir/planted" "$work_dir/clean"

@@ -59,15 +59,25 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with: { fetch-depth: 0 }
-      # The gitleaks-action wrapper needs a paid licence key for organisation
-      # repositories; the binary is MIT.
-      - name: Installer refuses a wrong digest
-        run: bash scripts/ci/security-scans_test.sh gitleaks-install
-      - name: Install pinned gitleaks
+      - id: gitleaks-pin
+        name: Read pinned gitleaks version
         run: |
           set -euo pipefail
-          bash scripts/ci/install-gitleaks.sh "$RUNNER_TEMP/gitleaks-bin"
-          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+          . tools/tool-versions.env
+          echo "version=$GITLEAKS_VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha256=$GITLEAKS_LINUX_X64_SHA256" >> "$GITHUB_OUTPUT"
+      # The gitleaks-action wrapper needs a paid licence key for organisation
+      # repositories; the binary is MIT.
+      - name: Install pinned gitleaks
+        uses: plurano/horistes/actions/install-gitleaks@962524ee8f56e372c3d6c46bcafaf956d7cc44a5
+        with:
+          version: ${{ steps.gitleaks-pin.outputs.version }}
+          sha256: ${{ steps.gitleaks-pin.outputs.sha256 }}
+          install-dir: ${{ runner.temp }}/gitleaks-bin
+      - name: Add gitleaks to PATH
+        env:
+          GITLEAKS_DIR: ${{ runner.temp }}/gitleaks-bin
+        run: echo "$GITLEAKS_DIR" >> "$GITHUB_PATH"
       - name: gitleaks refuses a planted key
         run: bash scripts/ci/security-scans_test.sh gitleaks-scan
       - name: gitleaks
