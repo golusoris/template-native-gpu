@@ -36,3 +36,5 @@ scripts/release/concat-changelog-fragments.sh --check   # CI gate
 release-please consumes Conventional Commits to write the final `CHANGELOG.md`;
 these fragments are the human-readable, conflict-free staging area and the
 preview source.
+
+Planted probe: this line will recieve a codespell finding.
