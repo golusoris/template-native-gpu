@@ -6,6 +6,9 @@
 
 minimum_pre_commit_version: "3.5.0"
 fail_fast: false
+# markdownlint-cli2 runs on node; nodeenv installs the latest release unless pinned.
+default_language_version:
+  node: "26.13.0"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

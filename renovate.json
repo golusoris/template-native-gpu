@@ -21,6 +21,18 @@
   "customManagers": [
     {
       "customType": "regex",
+      "description": "Update the node pin pre-commit hands to nodeenv.",
+      "managerFilePatterns": [
+        "/^\\.pre-commit-config\\.yaml$/"
+      ],
+      "matchStrings": [
+        "default_language_version:\\n  node: \"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "node-version",
+      "depNameTemplate": "node"
+    },
+    {
+      "customType": "regex",
       "description": "Update actionlint and its image digest as one pair.",
       "managerFilePatterns": [
         "/^tools/tool-versions\\.env$/"
