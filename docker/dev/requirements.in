@@ -10,4 +10,3 @@
 #     --exclude-newer-package virtualenv=2026-10-23T00:00:00Z \
 #     --output-file docker/dev/requirements.txt docker/dev/requirements.in
 pre-commit==4.6.2
-semgrep==1.180.0
