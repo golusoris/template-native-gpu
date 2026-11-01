@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD013 -->
 # template-native-gpu
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16159/badge)](https://www.bestpractices.dev/projects/16159)
+
 A reusable project **template / boilerplate** for native (C/C++) + GPU +
 FFmpeg-filter projects. It ships the full cross-cutting layer (build, CI,
 supply-chain, security, docs, agents) plus two variants of the actual code:
