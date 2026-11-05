@@ -43,60 +43,76 @@ exceptions:
     path: .github/workflows/docker-publish.yml
     reason: adoption found the release workflows short of the declared supply chain (SLSA Build Level 3 declared, Level 2 measured); raise them as docs/guides/releasing.md in Praetor describes, then remove this entry
     expires: "2027-01-20"
-  - rule: codespell
-    path: .config/agent/hooks/block_evasion.py
-    category: C
-    entered: "2026-10-22"
-    reason: "category C: the emitted hook splits one word across two regex literals and codespell flags the first half; remove once the engine emits the pattern whole"
-    expires: "2026-11-01"
   - rule: declared-linters
     tool: cppcheck
     reason: adoption scaffolds no CI job for cppcheck declared by profile "native-gpu-systems"; run it in a workflow, or remove this entry
     expires: "2027-01-20"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/cuda/common.c
-    reason: "category C: missing CUDA toolchain lane (enable_cuda)"
-    expires: "2026-11-01"
+    category: C
+    entered: "2026-11-05"
+    reason: "category C: renewed 2026-11-05, no GPU toolchain lane yet: missing CUDA toolchain lane (enable_cuda)"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/cuda/dispatch_strategy.c
-    reason: "category C: missing CUDA toolchain lane (enable_cuda)"
-    expires: "2026-11-01"
+    category: C
+    entered: "2026-11-05"
+    reason: "category C: renewed 2026-11-05, no GPU toolchain lane yet: missing CUDA toolchain lane (enable_cuda)"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/cuda/scale_kernel.cu
-    reason: "category C: missing CUDA toolchain lane (nvcc)"
-    expires: "2026-11-01"
+    category: C
+    entered: "2026-11-05"
+    reason: "category C: renewed 2026-11-05, no GPU toolchain lane yet: missing CUDA toolchain lane (nvcc)"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/hip/common.c
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing HIP toolchain lane (enable_hip)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/hip/dispatch_strategy.c
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing HIP toolchain lane (enable_hip)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/hip/scale_kernel.hip
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing HIP toolchain lane (hipcc)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/metal/dispatch_strategy.c
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing Metal toolchain lane (enable_metal)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/sycl/common.cpp
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing SYCL toolchain lane (enable_sycl)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/sycl/dispatch_strategy.cpp
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing SYCL toolchain lane (enable_sycl)"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/test/fuzz/fuzz_dispatch_parse.c
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing libFuzzer fuzzing toolchain lane"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
   - rule: clang-tidy-coverage
     path: ffmpeg-patches/files/vf_project_vulkan.c
+    category: C
+    entered: "2026-11-05"
     reason: "category C: missing FFmpeg Vulkan filter build lane"
-    expires: "2026-11-01"
+    expires: "2026-11-15"
 overrides:
   branch_protection:
     enforce_linear_history: true
