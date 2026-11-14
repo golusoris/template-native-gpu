@@ -41,15 +41,26 @@ for index, line in enumerate(lines):
 else:
     raise SystemExit("FAIL render: release-please insertion heading missing")
 
-legacy = rendered.replace("* Initial template scaffold", "- Initial template scaffold")
+dash_bullet = rendered.replace(
+    "* **scope:** preserve generated release notes",
+    "- **scope:** preserve generated release notes",
+    1,
+)
+if dash_bullet == rendered:
+    raise SystemExit("FAIL render: dash-bullet mutation changed nothing")
 without_config = "".join(
-    line for line in legacy.splitlines(keepends=True)
+    line for line in dash_bullet.splitlines(keepends=True)
     if "markdownlint-configure-file" not in line
 )
+if without_config == rendered:
+    raise SystemExit("FAIL render: without-fix mutation changed nothing")
+third_blank = rendered.replace(entry, entry.replace("\n\n\n", "\n\n\n\n", 1), 1)
+if third_blank == rendered:
+    raise SystemExit("FAIL render: third-blank mutation changed nothing")
 (work / "rendered.md").write_text(rendered)
 (work / "without-fix.md").write_text(without_config)
-(work / "third-blank.md").write_text(rendered.replace(entry, entry.replace("\n\n\n", "\n\n\n\n", 1), 1))
-(work / "dash-bullet.md").write_text(legacy)
+(work / "third-blank.md").write_text(third_blank)
+(work / "dash-bullet.md").write_text(dash_bullet)
 PY
 
 lint() {
