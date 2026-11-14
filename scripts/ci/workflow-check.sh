@@ -5,6 +5,7 @@
 #   needs: docker, jq, and GH_TOKEN or GITHUB_TOKEN (read access is enough)
 # Interim gate: it calls actionlint and zizmor directly until the shared
 # workflow check can be called from a public repository.
+# Retry explicit pulls because registries can transiently miss pinned image layers.
 set -euo pipefail
 
 if [ $# -gt 1 ]; then
@@ -30,6 +31,20 @@ fi
 ACTIONLINT_IMAGE="mirror.gcr.io/rhysd/actionlint:${ACTIONLINT_VERSION}@${ACTIONLINT_IMAGE_DIGEST}"
 ZIZMOR_IMAGE="ghcr.io/zizmorcore/zizmor:${ZIZMOR_VERSION}@${ZIZMOR_IMAGE_DIGEST}"
 
+pull_image() {
+  local image="$1" attempt
+  for attempt in 1 2 3; do
+    if "$DOCKER" pull --quiet "$image"; then
+      return 0
+    fi
+    if [ "$attempt" -lt 3 ]; then
+      sleep "$((${WORKFLOW_CHECK_PULL_DELAY:-5} * attempt))"
+    fi
+  done
+  echo "error: pull $image failed after 3 attempts" >&2
+  exit 1
+}
+
 shopt -s nullglob
 FILES=()
 for f in "$ROOT"/.github/workflows/*.yml "$ROOT"/.github/workflows/*.yaml; do
@@ -40,7 +55,10 @@ if [ ${#FILES[@]} -eq 0 ]; then
   exit 1
 fi
 
-"$DOCKER" run --rm -v "$ROOT:/repo:ro" -w /repo \
+pull_image "$ACTIONLINT_IMAGE"
+pull_image "$ZIZMOR_IMAGE"
+
+"$DOCKER" run --pull never --rm -v "$ROOT:/repo:ro" -w /repo \
   -v "$REPO_ROOT/.github/actionlint.yaml:/actionlint.yaml:ro" \
   "$ACTIONLINT_IMAGE" -no-color -config-file /actionlint.yaml "${FILES[@]}"
 echo "actionlint: ${#FILES[@]} workflow files passed"
@@ -48,7 +66,7 @@ echo "actionlint: ${#FILES[@]} workflow files passed"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 rc=0
-GH_TOKEN="$TOKEN" "$DOCKER" run --rm -e GH_TOKEN -v "$ROOT:/repo:ro" -w /repo \
+GH_TOKEN="$TOKEN" "$DOCKER" run --pull never --rm -e GH_TOKEN -v "$ROOT:/repo:ro" -w /repo \
   "$ZIZMOR_IMAGE" --no-progress --color never --format json --persona pedantic \
   --no-ignores --no-config --strict-collection "${FILES[@]}" \
   >"$WORK/report.json" 2>"$WORK/zizmor.log" || rc=$?
