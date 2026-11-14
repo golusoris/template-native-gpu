@@ -12,6 +12,9 @@ release-please maintains this file from Conventional Commits; the
 
 ### Added
 
-- Initial template scaffold: minimal seed (libproject append-only interop ABI +
+* Initial template scaffold: minimal seed (libproject append-only interop ABI +
   Vulkan reference shader + FFmpeg patch stack) and the full GPU-matrix example
   (CUDA/HIP/Metal/SYCL/Vulkan dispatch).
+
+<!-- release-please output uses two blank lines between sections, URL-length bullets, and asterisk bullets. -->
+<!-- markdownlint-configure-file {"MD004": {"style": "asterisk"}, "MD012": {"maximum": 2}, "MD013": false} -->
