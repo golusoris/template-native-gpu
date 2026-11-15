@@ -9,6 +9,7 @@
 # started cannot pass by absence. ALLOWED_SKIPS lists, by name, the only checks
 # that may be skipped: jobs a change detector in the same run decided are not
 # affected. This template has no change detector, so the list is empty.
+# Bot-opened release-please heads here may skip CodeRabbit; a CodeRabbit failure still fails.
 
 name: required-aggregator
 on:
@@ -44,6 +45,11 @@ jobs:
           REF: ${{ github.event.pull_request.head.sha || github.sha }}
           SELF: required-checks
           ALLOWED_SKIPS: ""
+          RELEASE_HEAD_SKIPS: CodeRabbit
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
           REQUIRED: |
             format + lint
             workflows (actionlint, pinned actions)
