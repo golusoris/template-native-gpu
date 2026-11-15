@@ -16,7 +16,8 @@ readonly required=$'lint\nbuild'
 run() {
   local runs="$1" allowed="$2"
   printf '%s\n' "$runs" | REQUIRED="$required" ALLOWED_SKIPS="$allowed" SELF=agg \
-    HEAD_REF="${3:-}" HEAD_REPO="${4:-}" BASE_REPO="${5:-}" RELEASE_HEAD_SKIPS="${6:-}" "$judge"
+    HEAD_REF="${3:-}" HEAD_REPO="${4:-}" BASE_REPO="${5:-}" RELEASE_HEAD_SKIPS="${6:-}" \
+    HEAD_AUTHOR_TYPE="${7:-}" "$judge"
 }
 
 expect_pass() {
@@ -64,22 +65,26 @@ release_ref=release-please--branches--main--components--project
 release_skipped="$(ok lint)$(ok build)$(done_as CodeRabbit skipped)"
 release_failed="$(ok lint)$(ok build)$(done_as CodeRabbit failure)"
 
-expect_pass 'release head CodeRabbit skip' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit
-expect_pass 'release head combines skip lists' "$release_skipped$(done_as gpu skipped)" gpu "$release_ref" o/r o/r CodeRabbit
-expect_failure 'feature head CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' feat/x o/r o/r CodeRabbit
-expect_failure 'push event CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' '' '' o/r CodeRabbit
-expect_failure 'fork release head CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" fork/r o/r CodeRabbit
-expect_failure 'prefixed release ref CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' xrelease-please--main o/r o/r CodeRabbit
-expect_failure 'single dash release ref CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' release-please-main o/r o/r CodeRabbit
-expect_failure 'release head CodeRabbit failure' 'CodeRabbit: completed/failure' "$release_failed" '' "$release_ref" o/r o/r CodeRabbit
-expect_failure 'feature head CodeRabbit failure' 'CodeRabbit: completed/failure' "$release_failed" '' feat/x o/r o/r CodeRabbit
-expect_failure 'release head extra skip' 'extra: completed/skipped' "$release_skipped$(done_as extra skipped)" '' "$release_ref" o/r o/r CodeRabbit
-expect_failure 'release head empty skip list' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r ''
-expect_failure 'release head empty repos' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" '' '' CodeRabbit
-expect_failure 'release head missing base repo' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r '' CodeRabbit
-expect_failure 'release head CodeRabbit cancelled' 'CodeRabbit: completed/cancelled' "$(ok lint)$(ok build)$(done_as CodeRabbit cancelled)" '' "$release_ref" o/r o/r CodeRabbit
-expect_failure 'release head CodeRabbit neutral' 'CodeRabbit: completed/neutral' "$(ok lint)$(ok build)$(done_as CodeRabbit neutral)" '' "$release_ref" o/r o/r CodeRabbit
-expect_failure 'release head CodeRabbit running' 'CodeRabbit: in_progress/none' "$(ok lint)$(ok build)"'{"name":"CodeRabbit","status":"in_progress","conclusion":null}' '' "$release_ref" o/r o/r CodeRabbit
+expect_pass 'release head CodeRabbit skip' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_pass 'release head combines skip lists' "$release_skipped$(done_as gpu skipped)" gpu "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'feature head CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' feat/x o/r o/r CodeRabbit Bot
+expect_failure 'push event CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' '' '' o/r CodeRabbit Bot
+expect_failure 'fork release head CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" fork/r o/r CodeRabbit Bot
+expect_failure 'prefixed release ref CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' xrelease-please--main o/r o/r CodeRabbit Bot
+expect_failure 'single dash release ref CodeRabbit skip' 'CodeRabbit: completed/skipped' "$release_skipped" '' release-please-main o/r o/r CodeRabbit Bot
+expect_failure 'release head CodeRabbit failure' 'CodeRabbit: completed/failure' "$release_failed" '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'feature head CodeRabbit failure' 'CodeRabbit: completed/failure' "$release_failed" '' feat/x o/r o/r CodeRabbit Bot
+expect_failure 'release head extra skip' 'extra: completed/skipped' "$release_skipped$(done_as extra skipped)" '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'release head empty skip list' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r '' Bot
+expect_failure 'release head empty repos' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" '' '' CodeRabbit Bot
+expect_failure 'release head missing base repo' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r '' CodeRabbit Bot
+expect_failure 'release head CodeRabbit cancelled' 'CodeRabbit: completed/cancelled' "$(ok lint)$(ok build)$(done_as CodeRabbit cancelled)" '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'release head CodeRabbit neutral' 'CodeRabbit: completed/neutral' "$(ok lint)$(ok build)$(done_as CodeRabbit neutral)" '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'release head CodeRabbit running' 'CodeRabbit: in_progress/none' "$(ok lint)$(ok build)"'{"name":"CodeRabbit","status":"in_progress","conclusion":null}' '' "$release_ref" o/r o/r CodeRabbit Bot
+expect_failure 'release head User author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit User
+expect_failure 'release head empty author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit ''
+expect_failure 'release head lowercase bot author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit bot
+expect_failure 'release head Bots author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit Bots
 
 set +e
 printf '%s\n' "$clean" | REQUIRED='' SELF=agg "$judge" >/dev/null 2>&1

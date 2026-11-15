@@ -6,8 +6,7 @@
 # its name is in ALLOWED_SKIPS: jobs a change detector in the same run decided
 # are not affected. Every name in REQUIRED must be present, so a workflow that
 # never started cannot pass by absence. SELF names the aggregator's own check.
-# RELEASE_HEAD_SKIPS adds skip names only for HEAD_REF starting release-please--
-# with non-empty HEAD_REPO equal to BASE_REPO; push events leave head inputs empty.
+# RELEASE_HEAD_SKIPS: release-please--*, HEAD_REPO=BASE_REPO (nonempty), Bot author; off on push.
 #
 # Usage:
 #   gh api .../check-runs --paginate --jq '.check_runs[]|{name,status,conclusion}' |
@@ -25,7 +24,7 @@ if [[ -z "${REQUIRED:-}" || -z "${SELF:-}" ]]; then
 fi
 
 release_head_skips=''
-if [[ "${HEAD_REF:-}" == release-please--* && -n "${HEAD_REPO:-}" && "${HEAD_REPO:-}" == "${BASE_REPO:-}" ]]; then
+if [[ "${HEAD_REF:-}" == release-please--* && -n "${HEAD_REPO:-}" && "${HEAD_REPO:-}" == "${BASE_REPO:-}" && "${HEAD_AUTHOR_TYPE:-}" == Bot ]]; then
   release_head_skips="${RELEASE_HEAD_SKIPS:-}"
 fi
 
