@@ -12,11 +12,9 @@
 
 **Please do not open a public issue for security problems.**
 
-Use GitHub's private vulnerability-reporting flow:
-`https://github.com/your-org/myproject/security/advisories/new`
-
-Alternative channel: email `security@example.com` — PGP-encrypt anything
-sensitive; request the public key via the same address.
+Use GitHub private vulnerability reporting: open this repository's
+**Security** tab and choose **Report a vulnerability** (the form lives at
+`<repository URL>/security/advisories/new`). Only maintainers see the report.
 
 Please include:
 
