@@ -82,7 +82,8 @@ repos:
         language: python
         additional_dependencies: [pyyaml==6.0.3]
         pass_filenames: false
-        files: '^(\.codacy\.yml|\.pre-commit-config\.yaml)$|\.(md|markdown)$'
+        # Suffix match ignores case like identify does; codacy-config.py refuses a filter that misses a judged path.
+        files: '^(\.codacy\.yml|\.pre-commit-config\.yaml)$|(?i:\.(md|markdown))$'
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0

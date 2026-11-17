@@ -17,15 +17,19 @@ work_dir="$(mktemp -d "${TMPDIR:-/tmp}/project-codacy-test.XXXXXX")"
 readonly work_dir
 trap 'rm -rf "$work_dir"' EXIT
 
-# plant NAME HOOK_KEYS CODACY_BODY [TOP_KEYS]: a tree with one fragment and a
-# README; HOOK_KEYS and TOP_KEYS are YAML lines for the hook and the config top.
+parity_files="        files: '^(\\\\.codacy\\\\.yml|\\\\.pre-commit-config\\\\.yaml)\$|(?i:\\\\.(md|markdown))\$'\n"
+parity_repo="  - repo: local\n    hooks:\n      - id: codacy-markdownlint-parity\n        pass_filenames: false\n"
+
+# plant NAME HOOK_KEYS CODACY_BODY [TOP_KEYS] [PARITY_REPO]: a tree with one
+# fragment and a README; HOOK_KEYS and TOP_KEYS are YAML lines for the hook and
+# the config top, PARITY_REPO the parity hook's repo entry ('' leaves it out).
 plant() {
   local dir="$work_dir/$1"
   mkdir -p "$dir/changelog.d/fixed"
   printf -- '- fragment\n' >"$dir/changelog.d/fixed/a.md"
   printf '# readme\n' >"$dir/README.md"
-  printf '%brepos:\n  - repo: https://github.com/DavidAnson/markdownlint-cli2\n    rev: v0.22.1\n    hooks:\n      - id: markdownlint-cli2\n%b' \
-    "${4:-}" "$2" >"$dir/.pre-commit-config.yaml"
+  printf '%brepos:\n  - repo: https://github.com/DavidAnson/markdownlint-cli2\n    rev: v0.22.1\n    hooks:\n      - id: markdownlint-cli2\n%b%b' \
+    "${4:-}" "$2" "${5-$parity_repo$parity_files}" >"$dir/.pre-commit-config.yaml"
   printf '%b' "$3" >"$dir/.codacy.yml"
 }
 
@@ -71,6 +75,10 @@ plant engine-not-mapping "$hook" '---\nexclude_paths:\n  - "subprojects/**"\n  -
 plant hook-not-mapping "${hook}      - null\n" "$matching"
 plant repo-not-mapping "$hook" "$matching"
 printf 'repos:\n  - null\n' >"$work_dir/repo-not-mapping/.pre-commit-config.yaml"
+plant parity-case-sensitive "$hook" "$matching" "" "${parity_repo}        files: '\\\\.(md|markdown)\$|^\\\\.codacy\\\\.yml\$|^\\\\.pre-commit-config\\\\.yaml\$'\n"
+plant parity-misses-config "$hook" "$matching" "" "${parity_repo}        files: '(?i:\\\\.(md|markdown))\$'\n"
+plant parity-missing "$hook" "$matching" "" ""
+plant parity-types-key "$hook" "$matching" "" "${parity_repo}${parity_files}        types: [markdown]\n"
 
 for accepted in matching global-exclude top-level-exclude; do
   python3 "$check" "$work_dir/$accepted"
@@ -91,4 +99,8 @@ expect_refusal top-level-files 1 'README.md: pre-commit markdownlint skips it, C
 expect_refusal engine-not-mapping 2 '.codacy.yml: engines.markdownlint must be a mapping'
 expect_refusal hook-not-mapping 2 '.pre-commit-config.yaml: hooks must be a list of mappings'
 expect_refusal repo-not-mapping 2 '.pre-commit-config.yaml: repos must be a list of mappings'
-printf 'codacy config check: 3 accepted, 16 refused\n'
+expect_refusal parity-case-sensitive 1 'docs/x.MD: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-misses-config 1 '.codacy.yml: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-missing 2 'expected one codacy-markdownlint-parity hook, found 0'
+expect_refusal parity-types-key 2 'codacy-markdownlint-parity hook: unsupported key types'
+printf 'codacy config check: 3 accepted, 20 refused\n'

@@ -11,6 +11,8 @@ here. Untracked files only add probes: the verdict depends on the path, not the 
 
 The hook side applies pre-commit's top-level and hook files/exclude regexes with
 pre-commit's defaults; the Codacy side applies the global and engine exclude_paths.
+The codacy-markdownlint-parity hook's own files/exclude must select every judged path
+and both configuration files, so a commit that can move either side runs this check.
 A key whose effect on path selection this check does not model is refused, not ignored,
 and so is a value of the wrong type; only an absent value reads as empty.
 
@@ -29,8 +31,12 @@ from pathlib import Path
 import yaml
 
 HOOK_ID = "markdownlint-cli2"
+PARITY_ID = "codacy-markdownlint-parity"
+PRECOMMIT = ".pre-commit-config.yaml"
+CONFIG_PATHS = (".codacy.yml", PRECOMMIT)
 ENGINE = "markdownlint"
-PROBES = ("changelog.d/fixed/x.md", "docs/adr/_index_fragments/0001-x.md", "subprojects/x/README.md")
+PROBES = ("changelog.d/fixed/x.md", "docs/adr/_index_fragments/0001-x.md", "subprojects/x/README.md", "docs/x.MD")
+PARITY_UNMODELLED = frozenset({"types", "types_or", "exclude_types", "always_run"})
 GLOB_ALLOWED = re.compile(r"[A-Za-z0-9_./*-]+")
 MARKDOWN_SUFFIXES = (".md", ".markdown")  # matched lowercased: identify tags README.MD as markdown
 CODACY_KEYS = frozenset({"engines", "exclude_paths"})
@@ -111,18 +117,36 @@ def include_exclude(config: dict, where: str) -> Filter:
     return regex(config, "files", "", where), regex(config, "exclude", "^$", where)
 
 
-def hook_filters(root: Path) -> list[Filter]:
-    """The top-level filter, then the hook's, as pre-commit applies them."""
-    where = ".pre-commit-config.yaml"
-    config = mapping(yaml.safe_load((root / where).read_text(encoding="utf-8")), where)
-    hooks = [hook for repo in mapping_list(config.get("repos"), f"{where}: repos")
-             for hook in mapping_list(repo.get("hooks"), f"{where}: hooks") if hook.get("id") == HOOK_ID]
+def one_hook(config: dict, hook_id: str) -> dict:
+    hooks = [hook for repo in mapping_list(config.get("repos"), f"{PRECOMMIT}: repos")
+             for hook in mapping_list(repo.get("hooks"), f"{PRECOMMIT}: hooks") if hook.get("id") == hook_id]
     if len(hooks) != 1:
-        raise ConfigError(f"{where}: expected one {HOOK_ID} hook, found {len(hooks)}")
-    hook = known_keys(hooks[0], HOOK_KEYS, f"{where}: {HOOK_ID} hook")
+        raise ConfigError(f"{PRECOMMIT}: expected one {hook_id} hook, found {len(hooks)}")
+    return hooks[0]
+
+
+def hook_filters(config: dict) -> list[Filter]:
+    """The top-level filter, then the hook's, as pre-commit applies them."""
+    hook = known_keys(one_hook(config, HOOK_ID), HOOK_KEYS, f"{PRECOMMIT}: {HOOK_ID} hook")
     if hook.get("pass_filenames", True) is not True:
-        raise ConfigError(f"{where}: {HOOK_ID} hook must pass filenames; its own globs are not modelled")
-    return [include_exclude(config, where), include_exclude(hook, f"{where}: {HOOK_ID} hook")]
+        raise ConfigError(f"{PRECOMMIT}: {HOOK_ID} hook must pass filenames; its own globs are not modelled")
+    return [include_exclude(config, PRECOMMIT), include_exclude(hook, f"{PRECOMMIT}: {HOOK_ID} hook")]
+
+
+def selected(filters: list[Filter], path: str) -> bool:
+    return all(files.search(path) and not exclude.search(path) for files, exclude in filters)
+
+
+def parity_misses(config: dict, paths: list[str]) -> list[str]:
+    """The parity hook's own filter; the top-level one applies to every hook alike."""
+    where = f"{PRECOMMIT}: {PARITY_ID} hook"
+    hook = one_hook(config, PARITY_ID)
+    unknown = sorted(PARITY_UNMODELLED & set(hook))
+    if unknown:
+        raise ConfigError(f"{where}: unsupported key {', '.join(unknown)}; teach this check its effect first")
+    filters = [include_exclude(hook, where)]
+    return [f"{path}: the {PARITY_ID} hook does not run when it changes"
+            for path in [*CONFIG_PATHS, *paths] if not selected(filters, path)]
 
 
 def tree_markdown(root: Path) -> list[str]:
@@ -135,11 +159,13 @@ def tree_markdown(root: Path) -> list[str]:
 
 
 def drift(root: Path) -> list[str]:
-    filters = hook_filters(root)
+    config = mapping(yaml.safe_load((root / PRECOMMIT).read_text(encoding="utf-8")), PRECOMMIT)
+    filters = hook_filters(config)
     globs = [glob_regex(glob) for glob in codacy_globs(root)]
-    findings = []
-    for path in sorted(set(tree_markdown(root)) | set(PROBES)):
-        hook_skips = not all(files.search(path) and not exclude.search(path) for files, exclude in filters)
+    paths = sorted(set(tree_markdown(root)) | set(PROBES))
+    findings = parity_misses(config, paths)
+    for path in paths:
+        hook_skips = not selected(filters, path)
         codacy_skips = any(glob.fullmatch(path) for glob in globs)
         if hook_skips and not codacy_skips:
             findings.append(f"{path}: pre-commit markdownlint skips it, Codacy lints it")
@@ -162,7 +188,8 @@ def main(argv: list[str]) -> int:
         print(f"codacy-config: {finding}", file=sys.stderr)
     if findings:
         print("codacy-config: keep the exclude_paths in .codacy.yml on the files/exclude filters "
-              f"of the {HOOK_ID} hook in .pre-commit-config.yaml", file=sys.stderr)
+              f"of the {HOOK_ID} hook in {PRECOMMIT}, and the {PARITY_ID} hook filter on every "
+              "Markdown path and both configuration files", file=sys.stderr)
         return 1
     print("codacy-config: Codacy markdownlint and the pre-commit hook skip the same paths")
     return 0
