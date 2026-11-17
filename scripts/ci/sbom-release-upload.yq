@@ -1,10 +1,20 @@
 # Lists every anchore/sbom-action step that would attach release assets
 # (upload-release-assets not false) in a job whose token lacks contents: write.
+# The action attaches assets only on a release event or a push to a tag (a called workflow
+# runs under its caller's event); a push filtered to branches alone never sees a tag, unless
+# the step moves release-ref-prefix. A pull_request-only workflow is skipped.
 (.permissions // {}) as $wp
+| ((.on | select(tag == "!!map") | keys) // (.on | [.] | flatten)) as $events
+| ((.on | select(tag == "!!map") | .push) // {}) as $push
+| ($events | any_c(. == "release" or . == "workflow_call")) as $release
+| ($events | any_c(. == "push")) as $pushes
+| ($push | ((has("branches") or has("branches-ignore")) and ((has("tags") or has("tags-ignore")) | not))) as $branch_only
+| select($release or $pushes)
 | .jobs | to_entries | .[] | .key as $job
 | (.value.permissions // $wp) as $p
 | select(($p == "write-all" or ($p | tag) == "!!map" and $p.contents == "write") | not)
 | .value.steps // [] | .[]
 | select((.uses // "") | test("^anchore/sbom-action@"))
 | select((.with."upload-release-assets" | to_string) != "false")
+| select($release or ($branch_only | not) or .with."release-ref-prefix" != null)
 | filename + ": job " + $job + ": sbom-release-upload: release asset upload needs contents: write"

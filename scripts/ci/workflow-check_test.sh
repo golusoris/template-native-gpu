@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh: a clean workflow and a flaky pull pass; a tag pin,
-# a stale or missing version comment, a broken workflow, a dead pull, a missing token and an
-# SBOM release upload without contents: write fail.
+# Planted cases for scripts/ci/workflow-check.sh: a clean workflow, a flaky pull and an SBOM step
+# that cannot reach a release pass; a tag pin, a stale or missing version comment, a broken
+# workflow, a dead pull, a missing token and an SBOM release upload without contents: write fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -100,14 +100,15 @@ plant broken .github "$CHECKOUT # v7.0.1" runs-in
 expect_refusal broken "syntax-check"
 
 SBOM=anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
-# plant_sbom CASE: two release jobs, one read-only without upload, one with contents: write.
+RELEASE=$'  release:\n    types: [published]'
+# plant_sbom CASE TRIGGER [WITH]: a read-only SBOM job and a contents: write one under the
+# on: block TRIGGER; WITH is one more input line for the read-only step.
 plant_sbom() {
   mkdir -p "$WORK/$1/.github/workflows"
   cat >"$WORK/$1/.github/workflows/planted.yml" <<YAML
 name: planted
 on:
-  release:
-    types: [published]
+$2
 permissions:
   contents: read
 jobs:
@@ -117,7 +118,7 @@ jobs:
       - uses: $SBOM # v0.24.0
         with:
           path: .
-$2
+${3:-}
   release-write:
     runs-on: ubuntu-26.04
     permissions:
@@ -129,16 +130,27 @@ $2
 YAML
 }
 
-plant_sbom sbom-scoped "          upload-release-assets: false"
+plant_sbom sbom-scoped "$RELEASE" "          upload-release-assets: false"
 bash "$HERE/workflow-check.sh" "$WORK/sbom-scoped" >/dev/null
 echo "ok   sbom-scoped: accepted"
 
-plant_sbom sbom-read-upload ""
+plant_sbom sbom-pull-request "  pull_request:"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-pull-request" >/dev/null
+echo "ok   sbom-pull-request: accepted"
+
+plant_sbom sbom-branch-push $'  push:\n    branches: [main]'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-branch-push" >/dev/null
+echo "ok   sbom-branch-push: accepted"
+
+plant_sbom sbom-read-upload "$RELEASE"
 expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
+
+plant_sbom sbom-tag-push $'  push:\n    tags: ["v*"]'
+expect_refusal sbom-tag-push "job read-only: sbom-release-upload"
 
 expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 3 accepted, 8 refused"
+echo "workflow check: 5 accepted, 9 refused"

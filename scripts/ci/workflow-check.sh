@@ -55,7 +55,7 @@ if [ ${#FILES[@]} -eq 0 ]; then
   exit 1
 fi
 
-# anchore/sbom-action attaches its SBOM to the release on a release event unless
+# anchore/sbom-action attaches its SBOM to the release on a release event or a tag push unless
 # upload-release-assets is false; without contents: write that step fails only at release time.
 if ! yq --version 2>/dev/null | grep -q mikefarah; then
   echo "error: mikefarah yq is required" >&2
