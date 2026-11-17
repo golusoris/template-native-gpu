@@ -9,6 +9,10 @@ touches it. The check compares both exclusion sets on every Markdown file in the
 plus probe paths, so a new hook exclusion without a Codacy glob, or the reverse, fails
 here. Untracked files only add probes: the verdict depends on the path, not the content.
 
+The hook side applies pre-commit's top-level and hook files/exclude regexes with
+pre-commit's defaults; the Codacy side applies the global and engine exclude_paths.
+A key whose effect on path selection this check does not model is refused, not ignored.
+
 Usage:
     codacy-config.py [ROOT]   # default: this repository
 Exit 0 = same sets, 1 = drift, 2 = a configuration this check cannot read.
@@ -28,10 +32,36 @@ ENGINE = "markdownlint"
 PROBES = ("changelog.d/fixed/x.md", "docs/adr/_index_fragments/0001-x.md", "subprojects/x/README.md")
 GLOB_ALLOWED = re.compile(r"[A-Za-z0-9_./*-]+")
 MARKDOWN_SUFFIXES = (".md", ".markdown")
+CODACY_KEYS = frozenset({"engines", "exclude_paths"})
+CODACY_ENGINE_KEYS = frozenset({"exclude_paths"})
+HOOK_KEYS = frozenset({"id", "pass_filenames", "files", "exclude"})
+
+Filter = tuple[re.Pattern[str], re.Pattern[str]]
 
 
 class ConfigError(Exception):
     """A configuration file this check cannot read."""
+
+
+def mapping(value: object, where: str) -> dict:
+    if not isinstance(value, dict):
+        raise ConfigError(f"{where} must be a mapping")
+    return value
+
+
+def known_keys(value: object, allowed: frozenset[str], where: str) -> dict:
+    unknown = sorted(str(key) for key in set(mapping(value, where)) - allowed)
+    if unknown:
+        raise ConfigError(f"{where}: unsupported key {', '.join(unknown)}; teach this check its effect first")
+    return value
+
+
+def string_list(value: object, where: str) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ConfigError(f"{where} must be a list of strings")
+    return value
 
 
 def glob_regex(glob: str) -> re.Pattern[str]:
@@ -44,25 +74,42 @@ def glob_regex(glob: str) -> re.Pattern[str]:
 
 
 def codacy_globs(root: Path) -> list[str]:
+    """Global exclude_paths skip a path for every engine, the engine's own for markdownlint."""
     text = (root / ".codacy.yml").read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         raise ConfigError(".codacy.yml must start with a '---' line")
-    config = yaml.safe_load(text) or {}
-    engine = ((config.get("engines") or {}).get(ENGINE)) or {}
-    globs = engine.get("exclude_paths") or []
-    if not isinstance(globs, list) or not all(isinstance(g, str) for g in globs):
-        raise ConfigError(f".codacy.yml: engines.{ENGINE}.exclude_paths must be a list of strings")
-    return globs
+    config = known_keys(yaml.safe_load(text) or {}, CODACY_KEYS, ".codacy.yml")
+    engines = mapping(config.get("engines") or {}, ".codacy.yml: engines")
+    where = f".codacy.yml: engines.{ENGINE}"
+    engine = known_keys(engines.get(ENGINE) or {}, CODACY_ENGINE_KEYS, where)
+    return (string_list(config.get("exclude_paths"), ".codacy.yml: exclude_paths")
+            + string_list(engine.get("exclude_paths"), f"{where}.exclude_paths"))
 
 
-def hook_exclude(root: Path) -> re.Pattern[str] | None:
-    config = yaml.safe_load((root / ".pre-commit-config.yaml").read_text(encoding="utf-8")) or {}
+def regex(config: dict, key: str, default: str, where: str) -> re.Pattern[str]:
+    value = config.get(key, default)
+    if not isinstance(value, str):
+        raise ConfigError(f"{where}: {key} must be a string")
+    return re.compile(value)
+
+
+def include_exclude(config: dict, where: str) -> Filter:
+    """pre-commit's defaults: files '' keeps every path, exclude '^$' drops none."""
+    return regex(config, "files", "", where), regex(config, "exclude", "^$", where)
+
+
+def hook_filters(root: Path) -> list[Filter]:
+    """The top-level filter, then the hook's, as pre-commit applies them."""
+    where = ".pre-commit-config.yaml"
+    config = mapping(yaml.safe_load((root / where).read_text(encoding="utf-8")) or {}, where)
     hooks = [hook for repo in config.get("repos") or [] for hook in repo.get("hooks") or []
              if hook.get("id") == HOOK_ID]
     if len(hooks) != 1:
-        raise ConfigError(f".pre-commit-config.yaml: expected one {HOOK_ID} hook, found {len(hooks)}")
-    exclude = hooks[0].get("exclude")
-    return re.compile(exclude) if exclude else None
+        raise ConfigError(f"{where}: expected one {HOOK_ID} hook, found {len(hooks)}")
+    hook = known_keys(hooks[0], HOOK_KEYS, f"{where}: {HOOK_ID} hook")
+    if hook.get("pass_filenames", True) is not True:
+        raise ConfigError(f"{where}: {HOOK_ID} hook must pass filenames; its own globs are not modelled")
+    return [include_exclude(config, where), include_exclude(hook, f"{where}: {HOOK_ID} hook")]
 
 
 def tree_markdown(root: Path) -> list[str]:
@@ -75,11 +122,11 @@ def tree_markdown(root: Path) -> list[str]:
 
 
 def drift(root: Path) -> list[str]:
-    hook = hook_exclude(root)
+    filters = hook_filters(root)
     globs = [glob_regex(glob) for glob in codacy_globs(root)]
     findings = []
     for path in sorted(set(tree_markdown(root)) | set(PROBES)):
-        hook_skips = bool(hook and hook.search(path))
+        hook_skips = not all(files.search(path) and not exclude.search(path) for files, exclude in filters)
         codacy_skips = any(glob.fullmatch(path) for glob in globs)
         if hook_skips and not codacy_skips:
             findings.append(f"{path}: pre-commit markdownlint skips it, Codacy lints it")
@@ -101,8 +148,8 @@ def main(argv: list[str]) -> int:
     for finding in findings:
         print(f"codacy-config: {finding}", file=sys.stderr)
     if findings:
-        print("codacy-config: keep engines.markdownlint.exclude_paths in .codacy.yml on the "
-              f"{HOOK_ID} hook exclude in .pre-commit-config.yaml", file=sys.stderr)
+        print("codacy-config: keep the exclude_paths in .codacy.yml on the files/exclude filters "
+              f"of the {HOOK_ID} hook in .pre-commit-config.yaml", file=sys.stderr)
         return 1
     print("codacy-config: Codacy markdownlint and the pre-commit hook skip the same paths")
     return 0
