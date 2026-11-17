@@ -86,6 +86,53 @@ expect_failure 'release head empty author' 'CodeRabbit: completed/skipped' "$rel
 expect_failure 'release head lowercase bot author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit bot
 expect_failure 'release head Bots author' 'CodeRabbit: completed/skipped' "$release_skipped" '' "$release_ref" o/r o/r CodeRabbit Bots
 
+readonly budget_name='Sourcery review' budget_app=sourcery-ai
+readonly budget_regex='review budget of [0-9,]+ diff characters for the last 7 days'
+readonly budget_summary="Sorry @someone, you've used your own review budget of 250,000 diff characters for the last 7 days."
+
+# run_budget TEXT RUNS: judge RUNS with the budget skip set to TEXT; other settings as on a feature head.
+run_budget() {
+  printf '%s\n' "$2" | REQUIRED="$required" ALLOWED_SKIPS='' SELF=agg BUDGET_SKIP_NAME="$budget_name" \
+    BUDGET_SKIP_APP="$budget_app" BUDGET_SKIP_TEXT="$1" "$judge"
+}
+
+expect_budget() {
+  local label="$1" want="$2" needle="$3" output status=0
+  shift 3
+  set +e
+  output="$(run_budget "$@" 2>&1)"
+  status=$?
+  set -e
+  if [[ $want == pass && $status -ne 0 ]] || [[ $want == fail && ($status -eq 0 || "$output" != *"$needle"*) ]]; then
+    printf 'FAIL %s: expected %s with %q, got status %d:\n%s\n' "$label" "$want" "$needle" "$status" "$output" >&2
+    exit 1
+  fi
+}
+
+app_run() {
+  jq -cn --arg n "$1" --arg a "$2" --arg c "$3" --arg s "$4" '{name: $n, status: "completed", conclusion: $c, app: $a, summary: $s}'
+}
+
+base="$(ok lint)$(ok build)"
+budget_skip="$(app_run "$budget_name" "$budget_app" skipped "$budget_summary")"
+
+expect_budget 'budget skip' pass '' "$budget_regex" "$base$budget_skip"
+expect_budget 'other Sourcery skip' fail 'Sourcery review: completed/skipped' "$budget_regex" \
+  "$base$(app_run "$budget_name" "$budget_app" skipped 'Sourcery is not enabled for this repository.')"
+expect_budget 'budget skip without summary' fail 'Sourcery review: completed/skipped' "$budget_regex" \
+  "$base"'{"name":"Sourcery review","status":"completed","conclusion":"skipped","app":"sourcery-ai","summary":null}'
+expect_budget 'monthly budget skip' fail 'Sourcery review: completed/skipped' "$budget_regex" \
+  "$base$(app_run "$budget_name" "$budget_app" skipped "${budget_summary/7 days/30 days}")"
+expect_budget 'Sourcery failure with budget text' fail 'Sourcery review: completed/failure' "$budget_regex" \
+  "$base$(app_run "$budget_name" "$budget_app" failure "$budget_summary")"
+expect_budget 'Sourcery neutral with budget text' fail 'Sourcery review: completed/neutral' "$budget_regex" \
+  "$base$(app_run "$budget_name" "$budget_app" neutral "$budget_summary")"
+expect_budget 'budget text on another check' fail 'extra: completed/skipped' "$budget_regex" \
+  "$base$(app_run extra "$budget_app" skipped "$budget_summary")"
+expect_budget 'budget text from another app' fail 'Sourcery review: completed/skipped' "$budget_regex" \
+  "$base$(app_run "$budget_name" github-actions skipped "$budget_summary")"
+expect_budget 'budget skip switched off' fail 'Sourcery review: completed/skipped' '' "$base$budget_skip"
+
 set +e
 printf '%s\n' "$clean" | REQUIRED='' SELF=agg "$judge" >/dev/null 2>&1
 empty_status=$?
