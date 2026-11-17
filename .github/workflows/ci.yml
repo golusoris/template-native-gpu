@@ -1,7 +1,6 @@
 # Primary CI: build + test the minimal seed and the full-gpu-matrix example
-# across a small OS matrix, plus format/lint gates. No GPU SDK is installed, so
-# every backend resolves to its -ENOSYS stub — the build and the
-# backend-agnostic tests still run green.
+# across a small OS matrix, plus format/lint gates. Production builds use the
+# -ENOSYS stubs; Linux lint lanes separately parse the vendor-toolchain units.
 
 name: ci
 on:
@@ -37,7 +36,7 @@ jobs:
   build-test:
     name: build + test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -70,6 +69,29 @@ jobs:
         with:
           go-version: "1.27.3"
           cache: false
+      - name: Install archive GPU toolchains (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 15
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang \
+            nvidia-cuda-toolkit libamdhip64-dev hipcc \
+            dpclang-6 dpclang-sycl-runtime-libs-6
+          clang++ --version
+          nvcc --version
+          hipcc --version
+          dpclang++-6 --version
+      - name: Configure archive GPU lint lanes (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: |
+          python3 scripts/ci/clang-tidy/kernel-database.py cuda build-cuda-archive --toolkit /usr/lib/cuda
+          python3 scripts/ci/clang-tidy/kernel-database.py hip build-hip-archive --toolkit /usr
+          sycl_headers="$(dpkg-query -L sycl-dpcpp-6-dev | sed -n 's@/sycl/sycl.hpp$@@p')"
+          test -f "$sycl_headers/sycl/sycl.hpp"
+          CXX=clang++ meson setup --werror build-sycl-archive examples/full-gpu-matrix/core \
+            -Dtidy_sycl=true "-Dtidy_sycl_include=$sycl_headers"
+          meson compile -C build-sycl-archive -j 2
       - name: clang-tidy and translation-unit coverage (Linux)
         if: runner.os == 'Linux'
         env:
@@ -84,6 +106,12 @@ jobs:
           python3 scripts/ci/clang-tidy/run.py build build-gpu
           GOBIN="$RUNNER_TEMP/bin" go install "github.com/cordanaLLM/praetor/cmd/standardsctl@$PRAETOR_REF"
           "$RUNNER_TEMP/bin/standardsctl" ci tidy-coverage --dir=.
+      - name: clang-tidy archive GPU lanes (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        run: |
+          export PATH="$RUNNER_TEMP/clang-tidy/bin:$PATH"
+          python3 scripts/ci/clang-tidy/run.py build-cuda-archive build-hip-archive build-sycl-archive
 
   format-lint:
     name: format + lint

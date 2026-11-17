@@ -38,6 +38,12 @@ clang_tidy:
       compile_database: build/compile_commands.json
     - name: gpu-example-cpu
       compile_database: build-gpu/compile_commands.json
+    - name: cuda-archive
+      compile_database: build-cuda-archive/compile_commands.json
+    - name: hip-archive
+      compile_database: build-hip-archive/compile_commands.json
+    - name: sycl-archive
+      compile_database: build-sycl-archive/compile_commands.json
 exceptions:
   - rule: HISS-11
     path: .github/workflows/docker-publish.yml
@@ -47,24 +53,6 @@ exceptions:
     tool: cppcheck
     reason: adoption scaffolds no CI job for cppcheck declared by profile "native-gpu-systems"; run it in a workflow, or remove this entry
     expires: "2027-01-20"
-  - rule: clang-tidy-coverage
-    path: examples/full-gpu-matrix/core/src/cuda/scale_kernel.cu
-    category: C
-    entered: "2026-11-14"
-    reason: "category C: renewed 2026-11-14, no GPU toolchain lane yet: missing CUDA toolchain lane (nvcc)"
-    expires: "2026-11-24"
-  - rule: clang-tidy-coverage
-    path: examples/full-gpu-matrix/core/src/hip/scale_kernel.hip
-    category: C
-    entered: "2026-11-14"
-    reason: "category C: missing HIP toolchain lane (hipcc)"
-    expires: "2026-11-24"
-  - rule: clang-tidy-coverage
-    path: examples/full-gpu-matrix/core/src/sycl/common.cpp
-    category: C
-    entered: "2026-11-14"
-    reason: "category C: missing SYCL toolchain lane (enable_sycl)"
-    expires: "2026-11-24"
   - rule: clang-tidy-coverage
     path: ffmpeg-patches/files/vf_project_vulkan.c
     category: C

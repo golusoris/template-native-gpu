@@ -39,6 +39,20 @@ project(
 cc = meson.get_compiler('c')
 fs = import('fs')
 
+# Lint-only archive: preserve the enabled backend's compiler and link pipeline.
+if get_option('tidy_sycl')
+  assert(meson.get_compiler('cpp').get_id() == 'clang', 'SYCL lint requires clang++')
+  sycl_headers = get_option('tidy_sycl_include')
+  assert(sycl_headers != '', 'SYCL lint requires tidy_sycl_include')
+  static_library(
+    'project_gpu_sycl_lint',
+    'src/sycl/common.cpp',
+    cpp_args: ['-DHAVE_SYCL', '-isystem', sycl_headers, '-isystem', sycl_headers / 'sycl'],
+    install: false,
+  )
+  subdir_done()
+endif
+
 is_cuda_enabled  = get_option('enable_cuda')
 is_sycl_enabled  = get_option('enable_sycl')
 is_hip_enabled   = get_option('enable_hip')

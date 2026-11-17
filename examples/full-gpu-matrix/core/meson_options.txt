@@ -32,3 +32,8 @@ option('enable_vulkan', type: 'boolean', value: true,
 
 option('enable_tests', type: 'boolean', value: true,
        description: 'Build the example test + fuzz harness')
+
+option('tidy_sycl', type: 'boolean', value: false,
+       description: 'Configure only the clang SYCL host-parse archive for linting')
+option('tidy_sycl_include', type: 'string', value: '',
+       description: 'SYCL include root for the lint-only archive')

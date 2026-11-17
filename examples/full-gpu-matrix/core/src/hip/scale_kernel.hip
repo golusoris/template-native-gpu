@@ -10,7 +10,7 @@
 
 extern "C" __global__ void proj_scale_kernel(float *data, unsigned long n, float scale)
 {
-    unsigned long i = (unsigned long)blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned long i = (unsigned long)blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n)
         data[i] *= scale;
 }

@@ -16,7 +16,7 @@
 
 #include "common.h"
 
-#include <errno.h>
+#include <cerrno>
 
 #include <sycl/sycl.hpp>
 
@@ -27,7 +27,7 @@ struct ProjSyclState {
 extern "C" int proj_sycl_available(void)
 {
     try {
-        sycl::device d{sycl::default_selector_v};
+        const sycl::device d{sycl::default_selector_v};
         (void)d;
         return 1;
     } catch (const sycl::exception &) {
