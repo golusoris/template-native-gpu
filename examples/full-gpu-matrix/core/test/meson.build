@@ -9,6 +9,16 @@ dispatch_test = executable(
 )
 test('gpu-dispatch', dispatch_test, suite: 'fast')
 
+# The enabled backend already defines the selector in its SYCL object.
+if not is_sycl_enabled
+  sycl_dispatch_test = executable(
+    'sycl_dispatch_strategy_test',
+    files('test_sycl_dispatch_strategy.c', '../src/sycl/dispatch_strategy.cpp'),
+    dependencies: libproject_gpu_dep,
+  )
+  test('sycl-dispatch-strategy', sycl_dispatch_test, suite: 'fast')
+endif
+
 # Fuzz target — built only when the compiler accepts -fsanitize=fuzzer (clang).
 # CI wires this into the `fuzz` workflow; locally:
 #   meson setup build -Db_sanitize=address && meson compile -C build
