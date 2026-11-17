@@ -106,39 +106,26 @@ make verify-all
 <!-- markdownlint-disable MD013 -->
 # AGENTS.md — PROJECT
 
-Cross-tool agent guide (Claude Code, Codex, Cursor, …). Tool-specific extras in
-[CLAUDE.md](CLAUDE.md).
+Cross-tool agent guide (Claude Code, Codex, Cursor, …).
 
 ## Layout
 
-```text
-template-native-gpu/
-├── meson.build  meson_options.txt      # minimal-seed build (libproject)
-├── libproject/                         # shared native core
-│   ├── include/project/                # public headers (append-only interop ABI)
-│   ├── src/                            # interop.c + hello.c + version.c
-│   ├── shaders/                        # Vulkan reference shader (glslang -> .spv)
-│   └── test/                           # interop ABI conformance fixture
-├── ffmpeg-patches/                     # vf_project_* Vulkan filter patch stack
-│   ├── files/                          # canonical filter sources (source of truth)
-│   ├── generate.sh  series.txt         # regenerate stack
-│   └── test/build-and-run.sh           # apply + build + smoke gate
-├── examples/full-gpu-matrix/core/      # CUDA/HIP/Metal/SYCL/Vulkan dispatch example
-│   └── src/{cuda,hip,metal,sycl,vulkan}/  + gpu_dispatch_*, gpu_picture_pool
-├── changelog.d/                        # Keep-a-Changelog fragments (per section)
-├── docs/{adr,development,architecture,api}/  mkdocs.yml
-├── deploy/helm/project/                # app-agnostic Helm chart
-├── docker/dev/  .devcontainer/         # dev images
-├── .github/workflows/                  # CI + supply-chain + scorecard + security
-├── scripts/{adr,release}/              # ADR allocator + changelog renderer
-└── .claude/                            # agents, hooks, skills, settings
-```
+- `meson.build`: minimal-seed build of `libproject/` (public headers in
+  `include/project/`, append-only interop ABI; Vulkan shader; ABI conformance test).
+- `ffmpeg-patches/`: `vf_project_*` Vulkan filter stack; `files/` = source of
+  truth, `generate.sh` rebuilds it, `test/build-and-run.sh` = smoke gate.
+- `examples/full-gpu-matrix/core/`: CUDA/HIP/Metal/SYCL/Vulkan dispatch example.
+- `changelog.d/`, `docs/` (ADRs, mkdocs), `deploy/helm/project/`, `docker/dev/`,
+  `scripts/`, `.claude/` (agents, hooks, skills).
 
 ## Build / test / gate
 
 ```bash
 meson setup build && meson compile -C build && meson test -C build
-pre-commit run --all-files        # format + lint + gitleaks (local gate)
+meson test -C build --suite=fast                 # pre-push gate
+ninja -C build install                           # install so FFmpeg patch sees libproject
+meson setup build-gpu examples/full-gpu-matrix/core && meson test -C build-gpu
+pre-commit run --all-files                       # format + lint + gitleaks
 ```
 
 ## Principles (`docs/principles.md`)
@@ -165,55 +152,13 @@ Conventional Commits, SemVer, Keep-a-Changelog (`changelog.d/`), Trunk-Based
 Dev (short-lived branches off `main`). Format: clang-format (config at root).
 One-liner WHY comments only.
 
-<!-- Folded from CLAUDE.md -->
+## Skills, reviewers, hooks (`.claude/`)
 
-<!-- markdownlint-disable MD013 -->
-# Claude Code guide — PROJECT
-
-Claude Code-specific extensions.
-
-## Architecture Shapes
-
-Reusable boilerplate: native (C/C++) + GPU + FFmpeg-filter projects:
-
-- **Minimal seed** (repo root): `libproject` (append-only interop ABI + hello
-  stub) + Vulkan reference shader + FFmpeg patch stack.
-- **Full GPU matrix** (`examples/full-gpu-matrix/`): CUDA / HIP / Metal / SYCL /
-  Vulkan dispatch scaffolding behind host layer.
-
-## Extended Build & Test
-
-```bash
-meson setup build && meson compile -C build      # libproject + interop test + shader
-meson test -C build --suite=fast                 # pre-push gate
-ninja -C build install                           # install so FFmpeg patch sees libproject
-
-meson setup build-gpu examples/full-gpu-matrix/core && meson test -C build-gpu
-```
-
-## Skills Available (`.claude/skills/`)
-
-| Skill | When |
-| :--- | :--- |
-| `add-gpu-backend` | add CUDA/HIP/Metal/SYCL backend to matrix example |
-| `new-adr` | record architecture decision |
-| `render-changelog` | preview changelog.d/ fragments |
-| `cut-release` | drive release-please release |
-
-## Reviewer Agents (`.claude/agents/`)
-
-`c-reviewer`, `cuda-reviewer`, `sycl-reviewer`, `hip-reviewer`, `metal-reviewer`,
-`meson-reviewer`, `pr-body-checker`. Invoke relevant reviewer before merging
-change in area.
-
-## Hooks Active (`.claude/hooks/`)
-
-- PreToolUse `block-unsafe-bash.sh`: blocks destructive commands + `--no-verify`.
-- PostToolUse `auto-format-on-edit.sh`: clang-formats C/C++ edits (skips
-  `ffmpeg-patches/files/`).
-- PostToolUse `docs-drift-warn.sh`: warns when interop/backend/build change
-  needs companion ABI bump / stub / changelog.
-- SessionStart / Stop: orientation + pre-push reminders.
+- Skills: `add-gpu-backend`, `new-adr`, `render-changelog`, `cut-release`.
+- Invoke matching reviewer agent (`c-`, `cuda-`, `sycl-`, `hip-`, `metal-`,
+  `meson-reviewer`, `pr-body-checker`) before merging change in area.
+- Hooks block destructive bash + verify-skip flags, clang-format C/C++ edits
+  (skip `ffmpeg-patches/files/`), warn on ABI/stub/changelog drift.
 
 ## Invariant Rules & Prohibitions
 

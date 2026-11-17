@@ -16,6 +16,9 @@ import os
 import subprocess
 import sys
 
+# The whole CI step takes about 33 s; a hung clang-tidy fails here, not at the 20-minute job limit.
+TIDY_TIMEOUT_S = 300
+
 
 def in_tree_units(build_dir: str, root: str) -> list[str]:
     with open(os.path.join(build_dir, "compile_commands.json"), encoding="utf-8") as db_file:
@@ -42,7 +45,13 @@ def main(argv: list[str]) -> int:
             print(f"clang-tidy: {build_dir}: no in-tree unit in the compile database", file=sys.stderr)
             return 1
         cmd = ["clang-tidy", "-p", build_dir, "--warnings-as-errors=*", *units]
-        if subprocess.run(cmd, check=False).returncode != 0:  # noqa: S603 - fixed argv, no shell
+        try:
+            # Fixed argv, no shell: clang-tidy plus the in-tree units read from the compile database.
+            result = subprocess.run(cmd, check=False, timeout=TIDY_TIMEOUT_S)  # noqa: S603  # nosec B603
+        except subprocess.TimeoutExpired:
+            print(f"clang-tidy: {build_dir}: no result after {TIDY_TIMEOUT_S} s", file=sys.stderr)
+            return 1
+        if result.returncode != 0:
             return 1
     return 0
 

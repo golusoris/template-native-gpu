@@ -41,11 +41,15 @@ clang_tidy:
 exceptions:
   - rule: HISS-11
     path: .github/workflows/docker-publish.yml
-    reason: adoption found the release workflows short of the declared supply chain (SLSA Build Level 3 declared, Level 2 measured); raise them as docs/guides/releasing.md in Praetor describes, then remove this entry
+    category: A
+    entered: "2026-10-22"
+    reason: "category A: stated interval 90 days from adoption; adoption found the release workflows short of the declared supply chain (SLSA Build Level 3 declared, Level 2 measured); raise them as docs/guides/releasing.md in Praetor describes, then remove this entry"
     expires: "2027-01-20"
   - rule: declared-linters
     tool: cppcheck
-    reason: adoption scaffolds no CI job for cppcheck declared by profile "native-gpu-systems"; run it in a workflow, or remove this entry
+    category: A
+    entered: "2026-10-22"
+    reason: "category A: stated interval 90 days from adoption; adoption scaffolds no CI job for cppcheck declared by profile native-gpu-systems; run it in a workflow, or remove this entry"
     expires: "2027-01-20"
   - rule: clang-tidy-coverage
     path: examples/full-gpu-matrix/core/src/cuda/common.c
@@ -127,3 +131,6 @@ overrides:
       - squash
     # The live ruleset main-protection already requires it; declared so the audit keeps the stricter value.
     require_extra_approval_for_unattributed_changes: true
+release:
+  e2e:
+    since: 80fd167a0a7e12a7afe68bdd43b1cd9792c8bf5b
