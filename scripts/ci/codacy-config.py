@@ -5,8 +5,9 @@
 
 Codacy lints Markdown with its own markdownlint, configured in .codacy.yml. A path the
 hook excludes but Codacy does not (a changelog.d fragment) fails every pull request that
-touches it. The check compares both exclusion sets on every tracked Markdown file plus
-probe paths, so a new hook exclusion without a Codacy glob, or the reverse, fails here.
+touches it. The check compares both exclusion sets on every Markdown file in the tree
+plus probe paths, so a new hook exclusion without a Codacy glob, or the reverse, fails
+here. Untracked files only add probes: the verdict depends on the path, not the content.
 
 Usage:
     codacy-config.py [ROOT]   # default: this repository
@@ -15,9 +16,8 @@ Exit 0 = same sets, 1 = drift, 2 = a configuration this check cannot read.
 
 from __future__ import annotations
 
+import os
 import re
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -27,7 +27,7 @@ HOOK_ID = "markdownlint-cli2"
 ENGINE = "markdownlint"
 PROBES = ("changelog.d/fixed/x.md", "docs/adr/_index_fragments/0001-x.md", "subprojects/x/README.md")
 GLOB_ALLOWED = re.compile(r"[A-Za-z0-9_./*-]+")
-GIT_TIMEOUT_S = 30
+MARKDOWN_SUFFIXES = (".md", ".markdown")
 
 
 class ConfigError(Exception):
@@ -38,8 +38,8 @@ def glob_regex(glob: str) -> re.Pattern[str]:
     """Java glob as Codacy reads it: ** crosses directories, * stays inside one."""
     if not GLOB_ALLOWED.fullmatch(glob):
         raise ConfigError(f".codacy.yml: unsupported glob {glob!r}: allowed are letters, digits, _ . / - and *")
-    parts = [".*" if token == "**" else "[^/]*" if token == "*" else re.escape(token)
-             for token in re.split(r"(\*\*|\*)", glob) if token]
+    parts = [".*" if piece == "**" else "[^/]*" if piece == "*" else re.escape(piece)
+             for piece in re.split(r"(\*\*|\*)", glob) if piece]
     return re.compile("".join(parts))
 
 
@@ -65,20 +65,20 @@ def hook_exclude(root: Path) -> re.Pattern[str] | None:
     return re.compile(exclude) if exclude else None
 
 
-def tracked_markdown(root: Path) -> list[str]:
-    git = shutil.which("git")
-    if git is None:
-        raise ConfigError("git is required")
-    out = subprocess.run([git, "-C", str(root), "ls-files", "-z", "--", "*.md", "*.markdown"],
-                         check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT_S).stdout
-    return [path for path in out.split("\0") if path]
+def tree_markdown(root: Path) -> list[str]:
+    paths = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [name for name in dirnames if name != ".git"]
+        rel_dir = Path(dirpath).relative_to(root)
+        paths.extend((rel_dir / name).as_posix() for name in filenames if name.endswith(MARKDOWN_SUFFIXES))
+    return paths
 
 
 def drift(root: Path) -> list[str]:
     hook = hook_exclude(root)
     globs = [glob_regex(glob) for glob in codacy_globs(root)]
     findings = []
-    for path in sorted(set(tracked_markdown(root)) | set(PROBES)):
+    for path in sorted(set(tree_markdown(root)) | set(PROBES)):
         hook_skips = bool(hook and hook.search(path))
         codacy_skips = any(glob.fullmatch(path) for glob in globs)
         if hook_skips and not codacy_skips:
@@ -95,7 +95,7 @@ def main(argv: list[str]) -> int:
     root = Path(argv[1] if len(argv) == 2 else Path(__file__).resolve().parents[2])
     try:
         findings = drift(root)
-    except (ConfigError, OSError, yaml.YAMLError, re.error, subprocess.SubprocessError) as err:
+    except (ConfigError, OSError, yaml.YAMLError, re.error) as err:
         print(f"codacy-config: {err}", file=sys.stderr)
         return 2
     for finding in findings:

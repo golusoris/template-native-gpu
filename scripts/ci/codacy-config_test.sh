@@ -17,7 +17,7 @@ work_dir="$(mktemp -d "${TMPDIR:-/tmp}/project-codacy-test.XXXXXX")"
 readonly work_dir
 trap 'rm -rf "$work_dir"' EXIT
 
-# plant NAME HOOK_EXCLUDE CODACY_BODY: a repository with one tracked fragment and a README.
+# plant NAME HOOK_EXCLUDE CODACY_BODY: a tree with one fragment and a README.
 plant() {
   local dir="$work_dir/$1"
   mkdir -p "$dir/changelog.d/fixed"
@@ -26,8 +26,6 @@ plant() {
   printf 'repos:\n  - repo: https://github.com/DavidAnson/markdownlint-cli2\n    rev: v0.22.1\n    hooks:\n      - id: markdownlint-cli2\n        exclude: %s\n' \
     "$2" >"$dir/.pre-commit-config.yaml"
   printf '%b' "$3" >"$dir/.codacy.yml"
-  git -C "$dir" init -q
-  git -C "$dir" add .
 }
 
 expect_refusal() {
