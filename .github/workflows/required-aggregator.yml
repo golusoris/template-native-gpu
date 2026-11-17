@@ -10,6 +10,7 @@
 # that may be skipped: jobs a change detector in the same run decided are not
 # affected. This template has no change detector, so the list is empty.
 # Bot-opened release-please heads here may skip CodeRabbit; a CodeRabbit failure still fails.
+# Sourcery review may skip only with its weekly review-budget text; any other skip or a failure fails.
 
 name: required-aggregator
 on:
@@ -46,6 +47,9 @@ jobs:
           SELF: required-checks
           ALLOWED_SKIPS: ""
           RELEASE_HEAD_SKIPS: CodeRabbit
+          BUDGET_SKIP_NAME: Sourcery review
+          BUDGET_SKIP_APP: sourcery-ai
+          BUDGET_SKIP_TEXT: 'review budget of [0-9,]+ diff characters for the last 7 days'
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           HEAD_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
@@ -66,5 +70,5 @@ jobs:
             cargo-deny (if Rust present)
         run: |
           gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}/check-runs?per_page=100" --paginate \
-            --jq '.check_runs[] | {name, status, conclusion}' |
+            --jq '.check_runs[] | {name, status, conclusion, app: .app.slug, summary: .output.summary}' |
             bash scripts/ci/required-checks.sh
