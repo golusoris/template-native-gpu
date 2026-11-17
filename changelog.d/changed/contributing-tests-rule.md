@@ -1,0 +1,1 @@
+- `CONTRIBUTING.md` now asks every new feature and bug fix to add or extend a test in the meson suite; a bug fix adds a test that fails without it.
