@@ -11,8 +11,9 @@ here. Untracked files only add probes: the verdict depends on the path, not the 
 
 The hook side applies pre-commit's top-level and hook files/exclude regexes with
 pre-commit's defaults; the Codacy side applies the global and engine exclude_paths.
-The codacy-markdownlint-parity hook's own files/exclude must select every judged path
-and both configuration files, so a commit that can move either side runs this check.
+The codacy-markdownlint-parity hook must survive pre-commit's top-level files/exclude
+and its own, select every judged path and both configuration files, and run at the
+pre-commit stage, so a commit that can move either side runs this check.
 A key whose effect on path selection this check does not model is refused, not ignored,
 and so is a value of the wrong type; only an absent value reads as empty.
 
@@ -42,6 +43,8 @@ MARKDOWN_SUFFIXES = (".md", ".markdown")  # matched lowercased: identify tags RE
 CODACY_KEYS = frozenset({"engines", "exclude_paths"})
 CODACY_ENGINE_KEYS = frozenset({"exclude_paths"})
 HOOK_KEYS = frozenset({"id", "pass_filenames", "files", "exclude"})
+COMMIT_STAGE = "pre-commit"
+LEGACY_STAGES = {"commit": "pre-commit", "merge-commit": "pre-merge-commit", "push": "pre-push"}
 
 Filter = tuple[re.Pattern[str], re.Pattern[str]]
 
@@ -133,20 +136,36 @@ def hook_filters(config: dict) -> list[Filter]:
     return [include_exclude(config, PRECOMMIT), include_exclude(hook, f"{PRECOMMIT}: {HOOK_ID} hook")]
 
 
+def runs_on_commit(config: dict, hook: dict, where: str) -> bool:
+    """pre-commit's stage choice: hook stages, else default_stages, else every stage."""
+    stages = string_list(hook.get("stages"), f"{where}: stages")
+    if not stages and "default_stages" in config:
+        stages = string_list(config["default_stages"], f"{PRECOMMIT}: default_stages")
+    elif not stages:
+        return True
+    return COMMIT_STAGE in {LEGACY_STAGES.get(stage, stage) for stage in stages}
+
+
 def selected(filters: list[Filter], path: str) -> bool:
     return all(files.search(path) and not exclude.search(path) for files, exclude in filters)
 
 
 def parity_misses(config: dict, paths: list[str]) -> list[str]:
-    """The parity hook's own filter; the top-level one applies to every hook alike."""
+    """Paths the parity hook misses after the top-level and its own filter, or no commit stage."""
     where = f"{PRECOMMIT}: {PARITY_ID} hook"
     hook = one_hook(config, PARITY_ID)
     unknown = sorted(PARITY_UNMODELLED & set(hook))
     if unknown:
         raise ConfigError(f"{where}: unsupported key {', '.join(unknown)}; teach this check its effect first")
-    filters = [include_exclude(hook, where)]
-    return [f"{path}: the {PARITY_ID} hook does not run when it changes"
-            for path in [*CONFIG_PATHS, *paths] if not selected(filters, path)]
+    filters = [include_exclude(config, PRECOMMIT), include_exclude(hook, where)]
+    misses = [f"{path}: the {PARITY_ID} hook does not run when it changes"
+              for path in [*CONFIG_PATHS, *paths] if not selected(filters, path)]
+    return misses + stage_misses(config, hook, PARITY_ID)
+
+
+def stage_misses(config: dict, hook: dict, hook_id: str) -> list[str]:
+    where = f"{PRECOMMIT}: {hook_id} hook"
+    return [] if runs_on_commit(config, hook, where) else [f"{hook_id} hook does not run at the {COMMIT_STAGE} stage"]
 
 
 def tree_markdown(root: Path) -> list[str]:
@@ -163,7 +182,7 @@ def drift(root: Path) -> list[str]:
     filters = hook_filters(config)
     globs = [glob_regex(glob) for glob in codacy_globs(root)]
     paths = sorted(set(tree_markdown(root)) | set(PROBES))
-    findings = parity_misses(config, paths)
+    findings = parity_misses(config, paths) + stage_misses(config, one_hook(config, HOOK_ID), HOOK_ID)
     for path in paths:
         hook_skips = not selected(filters, path)
         codacy_skips = any(glob.fullmatch(path) for glob in globs)

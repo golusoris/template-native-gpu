@@ -33,8 +33,13 @@ plant() {
   printf '%b' "$3" >"$dir/.codacy.yml"
 }
 
+# Counted as they run, so the summary cannot drift from the cases.
+accepted_count=0
+refusal_checks=0
+
 expect_refusal() {
   local name="$1" status="$2" needle="$3" output rc=0
+  refusal_checks=$((refusal_checks + 1))
   set +e
   output="$(python3 "$check" "$work_dir/$name" 2>&1)"
   rc=$?
@@ -56,6 +61,12 @@ no_fragments='---\nengines:\n  markdownlint:\n    exclude_paths:\n      - "subpr
 plant matching "$hook" "$matching"
 plant global-exclude "$hook" "${no_fragments}exclude_paths:\n  - \"changelog.d/**\"\n"
 plant top-level-exclude "        exclude: '^subprojects/|^docs/adr/_index_fragments/'\n" "$matching" "exclude: '^changelog.d/'\n"
+plant top-level-exclude-config "$hook" "$matching" "exclude: '^\\\\.codacy\\\\.yml\$'\n"
+plant parity-manual-stage "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: [manual]\n"
+plant default-stages-push "$hook" "$matching" "default_stages: [pre-push]\n"
+plant parity-stages-string "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: manual\n"
+plant default-stages-both "$hook" "$matching" "default_stages: [pre-commit, pre-push]\n"
+plant parity-legacy-stage "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: [commit]\n"
 plant codacy-lints-fragment "$hook" "$no_fragments"
 plant codacy-skips-readme "$hook" "${matching}      - \"*.md\"\n"
 plant global-skips-readme "$hook" "${matching}exclude_paths:\n  - \"README.md\"\n"
@@ -80,8 +91,9 @@ plant parity-misses-config "$hook" "$matching" "" "${parity_repo}        files: 
 plant parity-missing "$hook" "$matching" "" ""
 plant parity-types-key "$hook" "$matching" "" "${parity_repo}${parity_files}        types: [markdown]\n"
 
-for accepted in matching global-exclude top-level-exclude; do
+for accepted in matching global-exclude default-stages-both parity-legacy-stage; do
   python3 "$check" "$work_dir/$accepted"
+  accepted_count=$((accepted_count + 1))
 done
 expect_refusal codacy-lints-fragment 1 'changelog.d/fixed/a.md: pre-commit markdownlint skips it, Codacy lints it'
 expect_refusal codacy-skips-readme 1 'README.md: Codacy skips it, pre-commit markdownlint lints it'
@@ -103,4 +115,10 @@ expect_refusal parity-case-sensitive 1 'docs/x.MD: the codacy-markdownlint-parit
 expect_refusal parity-misses-config 1 '.codacy.yml: the codacy-markdownlint-parity hook does not run when it changes'
 expect_refusal parity-missing 2 'expected one codacy-markdownlint-parity hook, found 0'
 expect_refusal parity-types-key 2 'codacy-markdownlint-parity hook: unsupported key types'
-printf 'codacy config check: 3 accepted, 20 refused\n'
+expect_refusal top-level-exclude 1 'changelog.d/fixed/a.md: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal top-level-exclude-config 1 '.codacy.yml: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-manual-stage 1 'codacy-markdownlint-parity hook does not run at the pre-commit stage'
+expect_refusal default-stages-push 1 'markdownlint-cli2 hook does not run at the pre-commit stage'
+expect_refusal default-stages-push 1 'codacy-markdownlint-parity hook does not run at the pre-commit stage'
+expect_refusal parity-stages-string 2 'stages must be a list of strings'
+printf 'codacy config check: %d accepted, %d refusal checks\n' "$accepted_count" "$refusal_checks"
