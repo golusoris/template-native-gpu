@@ -62,6 +62,12 @@ plant unsupported-glob "$hook" '---\nengines:\n  markdownlint:\n    exclude_path
 plant codacy-include-paths "$hook" "${matching}include_paths:\n  - \"changelog.d/keep.md\"\n"
 plant hook-types-key "${hook}        types_or: [markdown]\n" "$matching"
 plant hook-own-globs "${hook}        pass_filenames: false\n" "$matching"
+plant hook-files "${hook}        files: '^docs/'\n" "$matching"
+plant top-level-files "$hook" "$matching" "files: '^docs/'\n"
+plant engine-not-mapping "$hook" '---\nexclude_paths:\n  - "subprojects/**"\n  - "changelog.d/**"\n  - "docs/adr/_index_fragments/**"\nengines:\n  markdownlint: []\n'
+plant hook-not-mapping "${hook}      - null\n" "$matching"
+plant repo-not-mapping "$hook" "$matching"
+printf 'repos:\n  - null\n' >"$work_dir/repo-not-mapping/.pre-commit-config.yaml"
 
 for accepted in matching global-exclude top-level-exclude; do
   python3 "$check" "$work_dir/$accepted"
@@ -76,4 +82,9 @@ expect_refusal unsupported-glob 2 'unsupported glob'
 expect_refusal codacy-include-paths 2 '.codacy.yml: unsupported key include_paths'
 expect_refusal hook-types-key 2 'markdownlint-cli2 hook: unsupported key types_or'
 expect_refusal hook-own-globs 2 'markdownlint-cli2 hook must pass filenames'
-printf 'codacy config check: 3 accepted, 10 refused\n'
+expect_refusal hook-files 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal top-level-files 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal engine-not-mapping 2 '.codacy.yml: engines.markdownlint must be a mapping'
+expect_refusal hook-not-mapping 2 '.pre-commit-config.yaml: hooks must be a list of mappings'
+expect_refusal repo-not-mapping 2 '.pre-commit-config.yaml: repos must be a list of mappings'
+printf 'codacy config check: 3 accepted, 15 refused\n'

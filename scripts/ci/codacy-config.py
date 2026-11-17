@@ -11,7 +11,8 @@ here. Untracked files only add probes: the verdict depends on the path, not the 
 
 The hook side applies pre-commit's top-level and hook files/exclude regexes with
 pre-commit's defaults; the Codacy side applies the global and engine exclude_paths.
-A key whose effect on path selection this check does not model is refused, not ignored.
+A key whose effect on path selection this check does not model is refused, not ignored,
+and so is a value of the wrong type; only an absent value reads as empty.
 
 Usage:
     codacy-config.py [ROOT]   # default: this repository
@@ -44,16 +45,28 @@ class ConfigError(Exception):
 
 
 def mapping(value: object, where: str) -> dict:
+    """Only an absent value (None) reads as empty; any other non-mapping is refused."""
+    if value is None:
+        return {}
     if not isinstance(value, dict):
         raise ConfigError(f"{where} must be a mapping")
     return value
 
 
+def mapping_list(value: object, where: str) -> list[dict]:
+    if value is None:
+        return []
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise ConfigError(f"{where} must be a list of mappings")
+    return value
+
+
 def known_keys(value: object, allowed: frozenset[str], where: str) -> dict:
-    unknown = sorted(str(key) for key in set(mapping(value, where)) - allowed)
+    config = mapping(value, where)
+    unknown = sorted(str(key) for key in set(config) - allowed)
     if unknown:
         raise ConfigError(f"{where}: unsupported key {', '.join(unknown)}; teach this check its effect first")
-    return value
+    return config
 
 
 def string_list(value: object, where: str) -> list[str]:
@@ -78,10 +91,10 @@ def codacy_globs(root: Path) -> list[str]:
     text = (root / ".codacy.yml").read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         raise ConfigError(".codacy.yml must start with a '---' line")
-    config = known_keys(yaml.safe_load(text) or {}, CODACY_KEYS, ".codacy.yml")
-    engines = mapping(config.get("engines") or {}, ".codacy.yml: engines")
+    config = known_keys(yaml.safe_load(text), CODACY_KEYS, ".codacy.yml")
+    engines = mapping(config.get("engines"), ".codacy.yml: engines")
     where = f".codacy.yml: engines.{ENGINE}"
-    engine = known_keys(engines.get(ENGINE) or {}, CODACY_ENGINE_KEYS, where)
+    engine = known_keys(engines.get(ENGINE), CODACY_ENGINE_KEYS, where)
     return (string_list(config.get("exclude_paths"), ".codacy.yml: exclude_paths")
             + string_list(engine.get("exclude_paths"), f"{where}.exclude_paths"))
 
@@ -101,9 +114,9 @@ def include_exclude(config: dict, where: str) -> Filter:
 def hook_filters(root: Path) -> list[Filter]:
     """The top-level filter, then the hook's, as pre-commit applies them."""
     where = ".pre-commit-config.yaml"
-    config = mapping(yaml.safe_load((root / where).read_text(encoding="utf-8")) or {}, where)
-    hooks = [hook for repo in config.get("repos") or [] for hook in repo.get("hooks") or []
-             if hook.get("id") == HOOK_ID]
+    config = mapping(yaml.safe_load((root / where).read_text(encoding="utf-8")), where)
+    hooks = [hook for repo in mapping_list(config.get("repos"), f"{where}: repos")
+             for hook in mapping_list(repo.get("hooks"), f"{where}: hooks") if hook.get("id") == HOOK_ID]
     if len(hooks) != 1:
         raise ConfigError(f"{where}: expected one {HOOK_ID} hook, found {len(hooks)}")
     hook = known_keys(hooks[0], HOOK_KEYS, f"{where}: {HOOK_ID} hook")
