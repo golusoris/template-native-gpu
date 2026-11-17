@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: EUPL-1.2
 """Emit a Clang host-parse database for a CUDA or HIP kernel."""
 
-# WHY: Meson uses nvcc for CUDA and has no HIP language; Clang -MJ emits its own argv.
+# WHY: Meson uses nvcc for CUDA and has no HIP language; clang-tidy needs host-parse commands.
+# https://clang.llvm.org/docs/JSONCompilationDatabase.html
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
 
@@ -22,9 +22,6 @@ def main() -> None:
     build = args.build_dir.resolve()
     build.mkdir(parents=True, exist_ok=True)
     database = build / "compile_commands.json"
-    database.unlink(missing_ok=True)
-    fragment = build / "kernel-command.json"
-    fragment.unlink(missing_ok=True)
     toolkit = args.toolkit.resolve()
     flags = (
         ["--cuda-host-only", f"--cuda-path={toolkit}"]
@@ -41,13 +38,10 @@ def main() -> None:
         args.lane,
         *flags,
         "-std=c++20",
-        "-fsyntax-only",
-        "-MJ",
-        str(fragment),
+        "-c",
         str(source),
     ]
-    subprocess.run(command, cwd=root, check=True, timeout=120)
-    entry = json.loads(fragment.read_text(encoding="utf-8").strip().removesuffix(","))
+    entry = {"directory": str(root), "file": str(source), "arguments": command}
     database.write_text(json.dumps([entry], indent=2) + "\n", encoding="utf-8")
 
 

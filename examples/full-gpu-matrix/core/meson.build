@@ -39,7 +39,7 @@ project(
 cc = meson.get_compiler('c')
 fs = import('fs')
 
-# Lint-only archive: preserve the enabled backend's compiler and link pipeline.
+# Lint-only configure builds the SYCL archive and skips the rest of the project.
 if get_option('tidy_sycl')
   assert(meson.get_compiler('cpp').get_id() == 'clang', 'SYCL lint requires clang++')
   sycl_headers = get_option('tidy_sycl_include')

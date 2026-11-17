@@ -36,6 +36,7 @@ jobs:
   build-test:
     name: build + test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # Archive steps cap at 15 + 5 + 10 minutes; the other steps take about 1 minute.
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -75,12 +76,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends clang \
-            nvidia-cuda-toolkit libamdhip64-dev hipcc \
-            dpclang-6 dpclang-sycl-runtime-libs-6
+            nvidia-cuda-toolkit libamdhip64-dev sycl-dpcpp-6-dev
           clang++ --version
           nvcc --version
-          hipcc --version
-          dpclang++-6 --version
       - name: Configure archive GPU lint lanes (Linux)
         if: runner.os == 'Linux'
         timeout-minutes: 5

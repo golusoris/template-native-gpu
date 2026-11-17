@@ -1,1 +1,0 @@
-- Check CUDA, HIP, and SYCL example units with clang-tidy using Ubuntu archive toolchain lanes.
