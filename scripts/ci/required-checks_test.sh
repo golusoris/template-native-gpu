@@ -90,10 +90,10 @@ readonly budget_name='Sourcery review' budget_app=sourcery-ai
 readonly budget_regex='review budget of [0-9,]+ diff characters for the last 7 days'
 readonly budget_summary="Sorry @someone, you've used your own review budget of 250,000 diff characters for the last 7 days."
 
-# run_budget TEXT RUNS: judge RUNS with the budget skip set to TEXT; other settings as on a feature head.
+# run_budget TEXT RUNS [NAME [APP]]: judge RUNS with the budget skip set to TEXT, NAME and APP (default the workflow's).
 run_budget() {
-  printf '%s\n' "$2" | REQUIRED="$required" ALLOWED_SKIPS='' SELF=agg BUDGET_SKIP_NAME="$budget_name" \
-    BUDGET_SKIP_APP="$budget_app" BUDGET_SKIP_TEXT="$1" "$judge"
+  printf '%s\n' "$2" | REQUIRED="$required" ALLOWED_SKIPS='' SELF=agg BUDGET_SKIP_NAME="${3-$budget_name}" \
+    BUDGET_SKIP_APP="${4-$budget_app}" BUDGET_SKIP_TEXT="$1" "$judge"
 }
 
 expect_budget() {
@@ -131,7 +131,12 @@ expect_budget 'budget text on another check' fail 'extra: completed/skipped' "$b
   "$base$(app_run extra "$budget_app" skipped "$budget_summary")"
 expect_budget 'budget text from another app' fail 'Sourcery review: completed/skipped' "$budget_regex" \
   "$base$(app_run "$budget_name" github-actions skipped "$budget_summary")"
-expect_budget 'budget skip switched off' fail 'Sourcery review: completed/skipped' '' "$base$budget_skip"
+expect_budget 'budget skip switched off by empty text' fail 'Sourcery review: completed/skipped' '' "$base$budget_skip"
+# An empty name or app must switch the path off even for a run that carries that empty value.
+expect_budget 'budget skip switched off by empty name' fail ': completed/skipped' "$budget_regex" \
+  "$base$(app_run '' "$budget_app" skipped "$budget_summary")" ''
+expect_budget 'budget skip switched off by empty app' fail 'Sourcery review: completed/skipped' "$budget_regex" \
+  "$base$(app_run "$budget_name" '' skipped "$budget_summary")" "$budget_name" ''
 
 set +e
 printf '%s\n' "$clean" | REQUIRED='' SELF=agg "$judge" >/dev/null 2>&1
