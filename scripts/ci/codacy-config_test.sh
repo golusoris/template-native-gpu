@@ -55,6 +55,9 @@ plant top-level-exclude "        exclude: '^subprojects/|^docs/adr/_index_fragme
 plant codacy-lints-fragment "$hook" "$no_fragments"
 plant codacy-skips-readme "$hook" "${matching}      - \"*.md\"\n"
 plant global-skips-readme "$hook" "${matching}exclude_paths:\n  - \"README.md\"\n"
+plant global-skips-upper-suffix "$hook" "${matching}exclude_paths:\n  - \"docs/GUIDE.MD\"\n"
+mkdir -p "$work_dir/global-skips-upper-suffix/docs"
+printf '# guide\n' >"$work_dir/global-skips-upper-suffix/docs/GUIDE.MD"
 plant hook-without-exclude "" "$matching"
 plant hook-empty-exclude "        exclude: ''\n" "$matching"
 plant no-document-start "$hook" "${matching#---\\n}"
@@ -75,6 +78,7 @@ done
 expect_refusal codacy-lints-fragment 1 'changelog.d/fixed/a.md: pre-commit markdownlint skips it, Codacy lints it'
 expect_refusal codacy-skips-readme 1 'README.md: Codacy skips it, pre-commit markdownlint lints it'
 expect_refusal global-skips-readme 1 'README.md: Codacy skips it, pre-commit markdownlint lints it'
+expect_refusal global-skips-upper-suffix 1 'docs/GUIDE.MD: Codacy skips it, pre-commit markdownlint lints it'
 expect_refusal hook-without-exclude 1 'changelog.d/fixed/a.md: Codacy skips it, pre-commit markdownlint lints it'
 expect_refusal hook-empty-exclude 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
 expect_refusal no-document-start 2 "must start with a '---' line"
@@ -87,4 +91,4 @@ expect_refusal top-level-files 1 'README.md: pre-commit markdownlint skips it, C
 expect_refusal engine-not-mapping 2 '.codacy.yml: engines.markdownlint must be a mapping'
 expect_refusal hook-not-mapping 2 '.pre-commit-config.yaml: hooks must be a list of mappings'
 expect_refusal repo-not-mapping 2 '.pre-commit-config.yaml: repos must be a list of mappings'
-printf 'codacy config check: 3 accepted, 15 refused\n'
+printf 'codacy config check: 3 accepted, 16 refused\n'

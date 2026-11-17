@@ -32,7 +32,7 @@ HOOK_ID = "markdownlint-cli2"
 ENGINE = "markdownlint"
 PROBES = ("changelog.d/fixed/x.md", "docs/adr/_index_fragments/0001-x.md", "subprojects/x/README.md")
 GLOB_ALLOWED = re.compile(r"[A-Za-z0-9_./*-]+")
-MARKDOWN_SUFFIXES = (".md", ".markdown")
+MARKDOWN_SUFFIXES = (".md", ".markdown")  # matched lowercased: identify tags README.MD as markdown
 CODACY_KEYS = frozenset({"engines", "exclude_paths"})
 CODACY_ENGINE_KEYS = frozenset({"exclude_paths"})
 HOOK_KEYS = frozenset({"id", "pass_filenames", "files", "exclude"})
@@ -130,7 +130,7 @@ def tree_markdown(root: Path) -> list[str]:
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [name for name in dirnames if name != ".git"]
         rel_dir = Path(dirpath).relative_to(root)
-        paths.extend((rel_dir / name).as_posix() for name in filenames if name.endswith(MARKDOWN_SUFFIXES))
+        paths.extend((rel_dir / name).as_posix() for name in filenames if name.lower().endswith(MARKDOWN_SUFFIXES))
     return paths
 
 
