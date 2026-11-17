@@ -2,7 +2,7 @@
 # Lint every workflow file and refuse an action that is not pinned to a commit
 # or whose version comment does not name that commit.
 #   usage: scripts/ci/workflow-check.sh [ROOT]   (default: this repository)
-#   needs: docker, jq, and GH_TOKEN or GITHUB_TOKEN (read access is enough)
+#   needs: docker, jq, mikefarah yq, and GH_TOKEN or GITHUB_TOKEN (read access is enough)
 # Interim gate: it calls actionlint and zizmor directly until the shared
 # workflow check can be called from a public repository.
 # Retry explicit pulls because registries can transiently miss pinned image layers.
@@ -54,6 +54,20 @@ if [ ${#FILES[@]} -eq 0 ]; then
   echo "error: no workflow file under $ROOT" >&2
   exit 1
 fi
+
+# anchore/sbom-action attaches its SBOM to the release on a release event unless
+# upload-release-assets is false; without contents: write that step fails only at release time.
+if ! yq --version 2>/dev/null | grep -q mikefarah; then
+  echo "error: mikefarah yq is required" >&2
+  exit 1
+fi
+RELEASE_UPLOADS="$(cd "$ROOT" && yq -r --from-file "$REPO_ROOT/scripts/ci/sbom-release-upload.yq" "${FILES[@]}")"
+if [ -n "$RELEASE_UPLOADS" ]; then
+  printf '%s\n' "$RELEASE_UPLOADS" >&2
+  echo "error: set upload-release-assets: false, or grant that job contents: write" >&2
+  exit 1
+fi
+echo "release uploads: every anchore/sbom-action step has the scope its release upload needs"
 
 pull_image "$ACTIONLINT_IMAGE"
 pull_image "$ZIZMOR_IMAGE"

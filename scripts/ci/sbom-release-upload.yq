@@ -1,0 +1,10 @@
+# Lists every anchore/sbom-action step that would attach release assets
+# (upload-release-assets not false) in a job whose token lacks contents: write.
+(.permissions // {}) as $wp
+| .jobs | to_entries | .[] | .key as $job
+| (.value.permissions // $wp) as $p
+| select(($p == "write-all" or ($p | tag) == "!!map" and $p.contents == "write") | not)
+| .value.steps // [] | .[]
+| select((.uses // "") | test("^anchore/sbom-action@"))
+| select((.with."upload-release-assets" | to_string) != "false")
+| filename + ": job " + $job + ": sbom-release-upload: release asset upload needs contents: write"

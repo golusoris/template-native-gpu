@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Planted cases for scripts/ci/workflow-check.sh: a clean workflow and a flaky pull pass; a tag pin,
-# a stale or missing version comment, a broken workflow, a dead pull and a missing token fail.
+# a stale or missing version comment, a broken workflow, a dead pull, a missing token and an
+# SBOM release upload without contents: write fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -98,9 +99,46 @@ expect_refusal no-comment "ref-version-mismatch"
 plant broken .github "$CHECKOUT # v7.0.1" runs-in
 expect_refusal broken "syntax-check"
 
+SBOM=anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+# plant_sbom CASE: two release jobs, one read-only without upload, one with contents: write.
+plant_sbom() {
+  mkdir -p "$WORK/$1/.github/workflows"
+  cat >"$WORK/$1/.github/workflows/planted.yml" <<YAML
+name: planted
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  read-only:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: $SBOM # v0.24.0
+        with:
+          path: .
+$2
+  release-write:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: $SBOM # v0.24.0
+        with:
+          path: .
+YAML
+}
+
+plant_sbom sbom-scoped "          upload-release-assets: false"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-scoped" >/dev/null
+echo "ok   sbom-scoped: accepted"
+
+plant_sbom sbom-read-upload ""
+expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
+
 expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 2 accepted, 7 refused"
+echo "workflow check: 3 accepted, 8 refused"
