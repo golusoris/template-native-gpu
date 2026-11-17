@@ -9,12 +9,14 @@
  */
 #include "dispatch_strategy.h"
 
+#include <cstdint>
+
 #include "../gpu_dispatch_env.h"
 #include "../gpu_dispatch_parse.h"
 
 /* Empirical: graph replay wins above 720p; smaller frames pay more in graph
  * setup than they save in dispatch overhead. */
-#define PROJ_SYCL_DEFAULT_AREA_THRESHOLD (1280U * 720U)
+#define PROJ_SYCL_DEFAULT_AREA_THRESHOLD (UINT64_C(1280) * UINT64_C(720))
 
 static const char *const k_strategy_names[] = {
     "direct", /* PROJ_SYCL_DISPATCH_DIRECT       = 0 */
@@ -30,7 +32,7 @@ extern "C" ProjSyclDispatchStrategy proj_sycl_select_strategy(const char *featur
     if (proj_gpu_dispatch_parse_env(env, feature_name, k_strategy_names, &idx))
         return static_cast<ProjSyclDispatchStrategy>(idx);
 
-    const unsigned long area = static_cast<unsigned long>(frame_w) * frame_h;
+    const std::uint64_t area = static_cast<std::uint64_t>(frame_w) * frame_h;
     return (area >= PROJ_SYCL_DEFAULT_AREA_THRESHOLD) ? PROJ_SYCL_DISPATCH_GRAPH_REPLAY :
                                                         PROJ_SYCL_DISPATCH_DIRECT;
 }

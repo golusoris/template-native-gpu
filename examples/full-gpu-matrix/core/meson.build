@@ -66,6 +66,8 @@ backend_sources = []          # plain host .c TUs (dispatch + stubs)
 backend_objects = []          # custom_target .o sets (e.g. SYCL icpx output)
 backend_deps    = []          # declare_dependency() handles (link args, libs)
 embedded_device_code = []     # bin2c / xxd / metallib generated sources
+lint_host_sources = []        # toolchain-free host TUs of disabled backends
+lint_host_args = []           # HAVE_* defines those TUs are guarded by
 
 # -----------------------------------------------------------------------------
 # CUDA — nvcc compiles each .cu to a .fatbin, bin2c embeds it as a C array.
@@ -127,6 +129,8 @@ if is_cuda_enabled
   endif
 else
   backend_sources += files('src/cuda/stubs.c')
+  lint_host_sources += files('src/cuda/common.c', 'src/cuda/dispatch_strategy.c')
+  lint_host_args += '-DHAVE_CUDA'
 endif
 
 # -----------------------------------------------------------------------------
@@ -198,6 +202,8 @@ if is_hip_enabled
   endif
 else
   backend_sources += files('src/hip/stubs.c')
+  lint_host_sources += files('src/hip/common.c', 'src/hip/dispatch_strategy.c')
+  lint_host_args += '-DHAVE_HIP'
 endif
 
 # -----------------------------------------------------------------------------
@@ -232,6 +238,7 @@ if is_metal_enabled
   )
 else
   backend_sources += files('src/metal/stubs.c')
+  lint_host_sources += files('src/metal/dispatch_strategy.c')
 endif
 
 # -----------------------------------------------------------------------------
@@ -311,6 +318,7 @@ if is_sycl_enabled
   )
 else
   backend_sources += files('src/sycl/stubs.c')
+  lint_host_sources += files('src/sycl/dispatch_strategy.cpp')
 endif
 
 # -----------------------------------------------------------------------------
@@ -348,6 +356,18 @@ libproject_gpu = library(
   soversion: '0',
   install: true,
 )
+
+# Compile-only archive: keeps --werror and clang-tidy on disabled backends' host TUs.
+if lint_host_sources.length() > 0
+  static_library(
+    'project_gpu_host_lint',
+    lint_host_sources,
+    include_directories: core_inc,
+    c_args: core_cflags + lint_host_args,
+    cpp_args: core_cflags + lint_host_args,
+    install: false,
+  )
+endif
 
 libproject_gpu_dep = declare_dependency(
   link_with: libproject_gpu,

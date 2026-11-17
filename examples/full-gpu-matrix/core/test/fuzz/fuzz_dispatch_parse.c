@@ -15,6 +15,7 @@
 
 static const char *const names[] = {"direct", "graph", "indirect", NULL};
 
+// NOLINTNEXTLINE(misc-use-internal-linkage) /* WHY: libFuzzer calls this entry point by name */
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* NUL-terminate a copy so the parser sees a valid C string. */

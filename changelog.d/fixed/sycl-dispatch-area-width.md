@@ -1,0 +1,1 @@
+- The SYCL dispatch strategy now computes the frame area in 64 bits, so frames of 65536 × 65536 pixels or more no longer wrap to a small area and pick direct dispatch on Windows, where `unsigned long` is 32 bits.

@@ -41,6 +41,7 @@ void proj_hip_state_free(ProjHipState **state)
     }
 }
 
+// NOLINTNEXTLINE(readability-non-const-parameter) /* WHY: signature must match common.h (data modified in-place by the real kernel) */
 int proj_hip_scale(ProjHipState *st, float *data, size_t n, float scale)
 {
     (void)st;

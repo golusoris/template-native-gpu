@@ -1,0 +1,1 @@
+- The full-gpu-matrix example now compiles the toolchain-free host sources of each disabled backend (CUDA, HIP and Metal dispatch, SYCL dispatch strategy) and, without libFuzzer, the fuzz harness into archives nothing links, so `--werror` and clang-tidy check them on every runner.

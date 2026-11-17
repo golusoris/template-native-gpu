@@ -21,4 +21,12 @@ if cc.has_argument('-fsanitize=fuzzer')
     include_directories: core_inc,
     build_by_default: false,
   )
+else
+  # Without libFuzzer the harness still compiles, so the compile database lists it.
+  static_library(
+    'fuzz_dispatch_parse_lint',
+    files('fuzz/fuzz_dispatch_parse.c'),
+    include_directories: core_inc,
+    install: false,
+  )
 endif
