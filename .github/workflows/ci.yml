@@ -74,7 +74,7 @@ jobs:
         if: runner.os == 'Linux'
         env:
           # Praetor engine commit whose clang-tidy coverage gate this job runs.
-          PRAETOR_REF: a60326a18b15c0755ba801c6e99e3bac415336df
+          PRAETOR_REF: 18fe7d2d1f73bf80cb5ecce2717b3c70813e3607
         run: |
           python3 -m venv "$RUNNER_TEMP/clang-tidy"
           "$RUNNER_TEMP/clang-tidy/bin/python" -m pip install \
