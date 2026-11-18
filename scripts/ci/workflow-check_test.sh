@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh: a clean workflow, a flaky pull, a called
-# workflow with contents: write and SBOM steps that cannot reach a release (disabled, branch-only
-# push, aliased branch push, default release-ref-prefix) pass; a tag pin, a stale or missing
-# version comment, a broken workflow, a dead pull, a missing token, an old yq and SBOM release
-# uploads without contents: write (release, tag push, aliased tag push, publish-sbom, expression,
-# non-tag release-ref-prefix, read-only workflow_call) fail.
+# Planted cases for scripts/ci/workflow-check.sh (12 accepted, 21 refused): a clean workflow, a
+# flaky pull, a called workflow with contents: write and SBOM steps that cannot reach a release
+# (disabled on root or publish-sbom, upper-case key, padded false, pull_request, branch-only push,
+# aliased branch push, default release-ref-prefix) pass; a tag pin, a stale or missing version
+# comment, a broken workflow, a dead pull, a missing token, an old yq and SBOM release uploads
+# without contents: write (release, upper-case uses, tag push, aliased tag push, publish-sbom
+# default, padded true, blank, non-false literal, expression, disagreeing keys, non-tag or
+# upper-case release-ref-prefix, read-only workflow_call) fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -162,6 +164,18 @@ plant_sbom sbom-false-capital "$RELEASE" "          upload-release-assets: 'Fals
 bash "$HERE/workflow-check.sh" "$WORK/sbom-false-capital" >/dev/null
 echo "ok   sbom-false-capital: accepted"
 
+plant_sbom sbom-publish-off "$RELEASE" "          upload-release-assets: false" "$SBOM_PUBLISH"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-publish-off" >/dev/null
+echo "ok   sbom-publish-off: accepted"
+
+plant_sbom sbom-key-upper "$RELEASE" "          UPLOAD-RELEASE-ASSETS: false"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-key-upper" >/dev/null
+echo "ok   sbom-key-upper: accepted"
+
+plant_sbom sbom-false-padded "$RELEASE" "          upload-release-assets: ' False '"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-false-padded" >/dev/null
+echo "ok   sbom-false-padded: accepted"
+
 plant_sbom sbom-pull-request "  pull_request:"
 bash "$HERE/workflow-check.sh" "$WORK/sbom-pull-request" >/dev/null
 echo "ok   sbom-pull-request: accepted"
@@ -185,20 +199,38 @@ echo "ok   sbom-called-write: accepted"
 plant_sbom sbom-read-upload "$RELEASE"
 expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
 
+plant_sbom sbom-uses-upper "$RELEASE" "" "Anchore/SBOM-Action@e22c389904149dbc22b58101806040fa8d37a610"
+expect_refusal sbom-uses-upper "job read-only: sbom-release-upload"
+
 plant_sbom sbom-tag-push $'  push:\n    tags: ["v*"]'
 expect_refusal sbom-tag-push "job read-only: sbom-release-upload"
 
 plant_sbom sbom-alias-tag-push $'  pull_request: &tags\n    tags: ["v*"]\n  push: *tags'
 expect_refusal sbom-alias-tag-push "job read-only: sbom-release-upload"
 
-plant_sbom sbom-publish-read "$RELEASE" "          upload-release-assets: false" "$SBOM_PUBLISH"
+plant_sbom sbom-publish-read "$RELEASE" "" "$SBOM_PUBLISH"
 expect_refusal sbom-publish-read "job read-only: sbom-release-upload"
+
+plant_sbom sbom-true-padded "$RELEASE" "          upload-release-assets: ' true '"
+expect_refusal sbom-true-padded "job read-only: sbom-release-upload"
+
+plant_sbom sbom-blank "$RELEASE" "          upload-release-assets: '  '"
+expect_refusal sbom-blank "job read-only: sbom-release-upload"
+
+plant_sbom sbom-other-literal "$RELEASE" "          upload-release-assets: 'no'"
+expect_refusal sbom-other-literal "job read-only: sbom-release-upload"
 
 plant_sbom sbom-expression "$RELEASE" "          upload-release-assets: \${{ inputs.x }}"
 expect_refusal sbom-expression "job read-only: sbom-release-upload"
 
+plant_sbom sbom-keys-disagree "$RELEASE" $'          upload-release-assets: false\n          UPLOAD-RELEASE-ASSETS: true'
+expect_refusal sbom-keys-disagree "job read-only: sbom-release-upload"
+
 plant_sbom sbom-prefix-heads $'  push:\n    branches: [main]' "          release-ref-prefix: refs/heads/"
 expect_refusal sbom-prefix-heads "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-key-upper $'  push:\n    branches: [main]' "          RELEASE-REF-PREFIX: refs/heads/"
+expect_refusal sbom-prefix-key-upper "job read-only: sbom-release-upload"
 
 plant_called sbom-called-read
 expect_refusal sbom-called-read "job read-only: sbom-release-upload"
@@ -222,4 +254,4 @@ expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 9 accepted, 15 refused"
+echo "workflow check: 12 accepted, 21 refused"
