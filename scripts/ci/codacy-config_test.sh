@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 The PROJECT Authors
+# SPDX-License-Identifier: EUPL-1.2
+#
+# scripts/ci/codacy-config_test.sh — planted cases for the Codacy markdownlint
+# parity check: each drifted or unreadable configuration must be refused, a
+# matching one accepted.
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+readonly repo_root
+check="$repo_root/scripts/ci/codacy-config.py"
+readonly check
+
+work_dir="$(mktemp -d "${TMPDIR:-/tmp}/project-codacy-test.XXXXXX")"
+readonly work_dir
+trap 'rm -rf "$work_dir"' EXIT
+
+parity_files="        files: '^(\\\\.codacy\\\\.yml|\\\\.pre-commit-config\\\\.yaml)\$|(?i:\\\\.(md|markdown))\$'\n"
+parity_repo="  - repo: local\n    hooks:\n      - id: codacy-markdownlint-parity\n        pass_filenames: false\n"
+
+# plant NAME HOOK_KEYS CODACY_BODY [TOP_KEYS] [PARITY_REPO]: a tree with one
+# fragment and a README; HOOK_KEYS and TOP_KEYS are YAML lines for the hook and
+# the config top, PARITY_REPO the parity hook's repo entry ('' leaves it out).
+plant() {
+  local dir="$work_dir/$1"
+  mkdir -p "$dir/changelog.d/fixed"
+  printf -- '- fragment\n' >"$dir/changelog.d/fixed/a.md"
+  printf '# readme\n' >"$dir/README.md"
+  printf '%brepos:\n  - repo: https://github.com/DavidAnson/markdownlint-cli2\n    rev: v0.22.1\n    hooks:\n      - id: markdownlint-cli2\n%b%b' \
+    "${4:-}" "$2" "${5-$parity_repo$parity_files}" >"$dir/.pre-commit-config.yaml"
+  printf '%b' "$3" >"$dir/.codacy.yml"
+}
+
+# Counted as they run, so the summary cannot drift from the cases.
+accepted_count=0
+refusal_checks=0
+
+expect_refusal() {
+  local name="$1" status="$2" needle="$3" output rc=0
+  refusal_checks=$((refusal_checks + 1))
+  set +e
+  output="$(python3 "$check" "$work_dir/$name" 2>&1)"
+  rc=$?
+  set -e
+  if [[ $rc -ne $status ]]; then
+    printf 'expected rc %d for %s, got %d:\n%s\n' "$status" "$name" "$rc" "$output" >&2
+    exit 1
+  fi
+  if [[ "$output" != *"$needle"* ]]; then
+    printf 'expected output for %s to contain %q, got:\n%s\n' "$name" "$needle" "$output" >&2
+    exit 1
+  fi
+}
+
+matching='---\nengines:\n  markdownlint:\n    exclude_paths:\n      - "subprojects/**"\n      - "changelog.d/**"\n      - "docs/adr/_index_fragments/**"\n'
+hook="        exclude: '^subprojects/|^changelog.d/|^docs/adr/_index_fragments/'\n"
+no_fragments='---\nengines:\n  markdownlint:\n    exclude_paths:\n      - "subprojects/**"\n      - "docs/adr/_index_fragments/**"\n'
+
+plant matching "$hook" "$matching"
+plant global-exclude "$hook" "${no_fragments}exclude_paths:\n  - \"changelog.d/**\"\n"
+plant top-level-exclude "        exclude: '^subprojects/|^docs/adr/_index_fragments/'\n" "$matching" "exclude: '^changelog.d/'\n"
+plant top-level-exclude-config "$hook" "$matching" "exclude: '^\\\\.codacy\\\\.yml\$'\n"
+plant parity-manual-stage "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: [manual]\n"
+plant default-stages-push "$hook" "$matching" "default_stages: [pre-push]\n"
+plant parity-stages-string "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: manual\n"
+plant default-stages-both "$hook" "$matching" "default_stages: [pre-commit, pre-push]\n"
+plant parity-legacy-stage "$hook" "$matching" "" "${parity_repo}${parity_files}        stages: [commit]\n"
+plant codacy-lints-fragment "$hook" "$no_fragments"
+plant codacy-skips-readme "$hook" "${matching}      - \"*.md\"\n"
+plant global-skips-readme "$hook" "${matching}exclude_paths:\n  - \"README.md\"\n"
+plant global-skips-upper-suffix "$hook" "${matching}exclude_paths:\n  - \"docs/GUIDE.MD\"\n"
+mkdir -p "$work_dir/global-skips-upper-suffix/docs"
+printf '# guide\n' >"$work_dir/global-skips-upper-suffix/docs/GUIDE.MD"
+plant hook-without-exclude "" "$matching"
+plant hook-empty-exclude "        exclude: ''\n" "$matching"
+plant no-document-start "$hook" "${matching#---\\n}"
+plant unsupported-glob "$hook" '---\nengines:\n  markdownlint:\n    exclude_paths:\n      - "{changelog.d,subprojects}/**"\n'
+plant codacy-include-paths "$hook" "${matching}include_paths:\n  - \"changelog.d/keep.md\"\n"
+plant hook-types-key "${hook}        types_or: [markdown]\n" "$matching"
+plant hook-own-globs "${hook}        pass_filenames: false\n" "$matching"
+plant hook-files "${hook}        files: '^docs/'\n" "$matching"
+plant top-level-files "$hook" "$matching" "files: '^docs/'\n"
+plant engine-not-mapping "$hook" '---\nexclude_paths:\n  - "subprojects/**"\n  - "changelog.d/**"\n  - "docs/adr/_index_fragments/**"\nengines:\n  markdownlint: []\n'
+plant hook-not-mapping "${hook}      - null\n" "$matching"
+plant repo-not-mapping "$hook" "$matching"
+printf 'repos:\n  - null\n' >"$work_dir/repo-not-mapping/.pre-commit-config.yaml"
+plant parity-case-sensitive "$hook" "$matching" "" "${parity_repo}        files: '\\\\.(md|markdown)\$|^\\\\.codacy\\\\.yml\$|^\\\\.pre-commit-config\\\\.yaml\$'\n"
+plant parity-misses-config "$hook" "$matching" "" "${parity_repo}        files: '(?i:\\\\.(md|markdown))\$'\n"
+plant parity-missing "$hook" "$matching" "" ""
+plant parity-types-key "$hook" "$matching" "" "${parity_repo}${parity_files}        types: [markdown]\n"
+
+for accepted in matching global-exclude default-stages-both parity-legacy-stage; do
+  python3 "$check" "$work_dir/$accepted"
+  accepted_count=$((accepted_count + 1))
+done
+expect_refusal codacy-lints-fragment 1 'changelog.d/fixed/a.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal codacy-skips-readme 1 'README.md: Codacy skips it, pre-commit markdownlint lints it'
+expect_refusal global-skips-readme 1 'README.md: Codacy skips it, pre-commit markdownlint lints it'
+expect_refusal global-skips-upper-suffix 1 'docs/GUIDE.MD: Codacy skips it, pre-commit markdownlint lints it'
+expect_refusal hook-without-exclude 1 'changelog.d/fixed/a.md: Codacy skips it, pre-commit markdownlint lints it'
+expect_refusal hook-empty-exclude 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal no-document-start 2 "must start with a '---' line"
+expect_refusal unsupported-glob 2 'unsupported glob'
+expect_refusal codacy-include-paths 2 '.codacy.yml: unsupported key include_paths'
+expect_refusal hook-types-key 2 'markdownlint-cli2 hook: unsupported key types_or'
+expect_refusal hook-own-globs 2 'markdownlint-cli2 hook must pass filenames'
+expect_refusal hook-files 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal top-level-files 1 'README.md: pre-commit markdownlint skips it, Codacy lints it'
+expect_refusal engine-not-mapping 2 '.codacy.yml: engines.markdownlint must be a mapping'
+expect_refusal hook-not-mapping 2 '.pre-commit-config.yaml: hooks must be a list of mappings'
+expect_refusal repo-not-mapping 2 '.pre-commit-config.yaml: repos must be a list of mappings'
+expect_refusal parity-case-sensitive 1 'docs/x.MD: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-misses-config 1 '.codacy.yml: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-missing 2 'expected one codacy-markdownlint-parity hook, found 0'
+expect_refusal parity-types-key 2 'codacy-markdownlint-parity hook: unsupported key types'
+expect_refusal top-level-exclude 1 'changelog.d/fixed/a.md: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal top-level-exclude-config 1 '.codacy.yml: the codacy-markdownlint-parity hook does not run when it changes'
+expect_refusal parity-manual-stage 1 'codacy-markdownlint-parity hook does not run at the pre-commit stage'
+expect_refusal default-stages-push 1 'markdownlint-cli2 hook does not run at the pre-commit stage'
+expect_refusal default-stages-push 1 'codacy-markdownlint-parity hook does not run at the pre-commit stage'
+expect_refusal parity-stages-string 2 'stages must be a list of strings'
+printf 'codacy config check: %d accepted, %d refusal checks\n' "$accepted_count" "$refusal_checks"

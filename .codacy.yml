@@ -1,0 +1,11 @@
+---
+# Codacy configuration (https://docs.codacy.com/repositories-configure/codacy-configuration-file/).
+# Codacy reads it from the default branch, and it replaces the Codacy UI ignored-file settings.
+# markdownlint skips exactly the paths the markdownlint-cli2 hook in .pre-commit-config.yaml
+# skips; that hook's comment gives the reason. scripts/ci/codacy-config.py fails on drift.
+engines:
+  markdownlint:
+    exclude_paths:
+      - "subprojects/**"
+      - "changelog.d/**"
+      - "docs/adr/_index_fragments/**"
