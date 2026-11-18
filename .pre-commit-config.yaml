@@ -72,6 +72,19 @@ repos:
         # rendered output (CHANGELOG.md / the ADR index) is linted instead.
         exclude: '^subprojects/|^changelog.d/|^docs/adr/_index_fragments/'
 
+  # Codacy lints Markdown with its own markdownlint; .codacy.yml must skip what the hook above skips.
+  - repo: local
+    hooks:
+      - id: codacy-markdownlint-parity
+        name: Codacy markdownlint skips what markdownlint-cli2 skips
+        entry: python scripts/ci/codacy-config.py
+        # Own virtualenv: the check imports PyYAML; pin matches docker/dev/requirements.txt.
+        language: python
+        additional_dependencies: [pyyaml==6.0.3]
+        pass_filenames: false
+        # Suffix match ignores case like identify does; codacy-config.py refuses a filter that misses a judged path.
+        files: '^(\.codacy\.yml|\.pre-commit-config\.yaml)$|(?i:\.(md|markdown))$'
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:

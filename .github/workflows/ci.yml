@@ -113,6 +113,10 @@ jobs:
         run: bash scripts/ci/advisory-exceptions_test.sh
       - name: Advisory exceptions hold (osv-scanner.toml)
         run: python3 scripts/ci/advisory-exceptions.py
+      - name: Codacy config check refuses its planted cases
+        run: bash scripts/ci/codacy-config_test.sh
+      - name: Codacy markdownlint skips what the pre-commit hook skips (.codacy.yml)
+        run: python3 scripts/ci/codacy-config.py
 
   helm-chart:
     name: helm chart (schema + gpu vendor keys)
