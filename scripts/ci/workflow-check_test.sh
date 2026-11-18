@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh (18 accepted, 42 refused): a clean workflow, a
+# Planted cases for scripts/ci/workflow-check.sh (20 accepted, 43 refused): a clean workflow, a
 # flaky pull, a called workflow with contents: write, local callers of it (granting write, silent,
-# calling it with upload disabled, or calling another workflow) and SBOM steps that cannot reach a release
+# calling it with upload disabled, calling another workflow, or reaching it through a write-granting
+# middle workflow) and SBOM steps that cannot reach a release
 # (disabled on root or publish-sbom in with, with false overriding env true, upper-case key, padded
 # false, pull_request, branch-only or aliased branch push with release-ref-prefix: refs/tags/ pinned
 # in with, and with prefix pin overriding step env or a GITHUB_ENV rewrite) pass; a tag pin, a stale
@@ -12,7 +13,8 @@
 # blank or non-tag release-ref-prefix in with including upper-case key or with bad over env, env-only
 # release-ref-prefix across step, job, workflow, shadowed, lower-case on ubuntu, Windows or matrix
 # runs-on, or GITHUB_ENV rewrite, an env that is no map, read-only workflow_call, tag push with the
-# prefix pinned, a local caller whose job, workflow or read-all permissions lack contents: write) fail.
+# prefix pinned, a local caller whose job, workflow or read-all permissions lack contents: write,
+# a read-only caller above a write-granting middle workflow) fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -197,6 +199,22 @@ jobs:
 YAML
 }
 
+# plant_chain CASE [TOP_JOB_PERMISSIONS] [CALLED_WITH]: caller -> middle.yml -> planted.yml, where
+# the middle job grants contents: write to the planted SBOM workflow.
+plant_chain() {
+  plant_caller "$1" "${2:-}" "" "${3:-}" middle.yml
+  cat >"$WORK/$1/.github/workflows/middle.yml" <<YAML
+name: middle
+on:
+  workflow_call:
+jobs:
+  relay:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/planted.yml
+YAML
+}
+
 plant_sbom sbom-scoped "$RELEASE" "          upload-release-assets: false"
 bash "$HERE/workflow-check.sh" "$WORK/sbom-scoped" >/dev/null
 echo "ok   sbom-scoped: accepted"
@@ -263,6 +281,14 @@ echo "ok   sbom-caller-off: accepted"
 plant_caller sbom-caller-other $'    permissions:\n      contents: read' "" "" other.yml
 bash "$HERE/workflow-check.sh" "$WORK/sbom-caller-other" >/dev/null
 echo "ok   sbom-caller-other: accepted"
+
+plant_chain sbom-chain-all-write $'    permissions:\n      contents: write'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-chain-all-write" >/dev/null
+echo "ok   sbom-chain-all-write: accepted"
+
+plant_chain sbom-chain-off $'    permissions:\n      contents: read' "          upload-release-assets: false"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-chain-off" >/dev/null
+echo "ok   sbom-chain-off: accepted"
 
 plant_sbom sbom-read-upload "$RELEASE"
 expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
@@ -374,6 +400,9 @@ expect_refusal sbom-caller-wf-read "job call: sbom-release-upload: caller grants
 plant_caller sbom-caller-read-all $'    permissions: read-all'
 expect_refusal sbom-caller-read-all "job call: sbom-release-upload: caller grants no contents: write to planted.yml"
 
+plant_chain sbom-chain-top-read $'    permissions:\n      contents: read'
+expect_refusal sbom-chain-top-read "job call: sbom-release-upload: caller grants no contents: write to middle.yml"
+
 mkdir -p "$WORK/old-yq-bin"
 cat >"$WORK/old-yq-bin/yq" <<'BASH'
 #!/usr/bin/env bash
@@ -393,4 +422,4 @@ expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 18 accepted, 42 refused"
+echo "workflow check: 20 accepted, 43 refused"

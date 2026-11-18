@@ -61,7 +61,8 @@ if ! YQ_VERSION="$(yq --version 2>/dev/null)" || [[ "$YQ_VERSION" != *mikefarah*
   echo "error: mikefarah yq is required" >&2
   exit 1
 fi
-if ! yq ea -n 'explode(.) | [1] | (any_c(. == 1) and all_c((to_string | trim | downcase | sub("^x"; "")) == "1"))' >/dev/null 2>&1; then
+# shellcheck disable=SC2016 # $i is a yq variable, not a shell expansion
+if ! yq ea -n 'explode(.) | ([0] | .[] as $i ireduce ([1]; . + [1] | unique)) | (any_c(. == 1) and all_c((to_string | trim | downcase | sub("^x"; "")) == "1"))' >/dev/null 2>&1; then
   echo "error: yq ${YQ_VERSION##* } lacks operators the SBOM rule needs; install a current mikefarah yq (tested with v4.52.4)" >&2
   exit 1
 fi

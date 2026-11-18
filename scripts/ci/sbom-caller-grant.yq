@@ -1,14 +1,20 @@
-# Lists every job that calls a local workflow_call workflow holding an upload-capable
-# anchore/sbom-action step while its own explicit permissions lack contents: write: a called job
-# cannot raise its caller's token. One level only; external callers must grant contents: write.
-[explode(.) | {"file": filename, "doc": .}] as $all
+# Lists every job that calls a local workflow reaching an upload-capable anchore/sbom-action step
+# while its own explicit permissions lack contents: write: a called job cannot raise its caller's
+# token. Local chains are followed for ten levels, the nesting limit; external callers are unchecked.
+[explode(.) | {"file": filename, "doc": .}] | . as $all
 | [$all[] | select(.doc.on | ((select(tag == "!!map") | keys) // ([.] | flatten)) | any_c(. == "workflow_call"))
    | select([.doc.jobs[] | .steps // [] | .[]]
        | map(select((.uses // "") | downcase | test("^anchore/sbom-action(/publish-sbom)?@")))
        | map(select(((.with // {}) | to_entries | map(select((.key | downcase) == "upload-release-assets") | .value | to_string | trim | downcase))
            | (length > 0 and all_c(. == "false")) | not))
        | length > 0)
-   | .file | sub("^.*/"; "")] as $called
+   | .file | sub("^.*/"; "")] as $holders
+| [$all[] | (.file | sub("^.*/"; "")) as $from
+   | .doc.jobs | to_entries | map(.value.uses) | map(select(tag == "!!str"))
+   | map(select(test("^\./\.github/workflows/[^/@]+$")) | sub("^\./\.github/workflows/"; ""))
+   | map({"from": $from, "to": .}) | .[]] as $edges
+| ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | .[] as $round ireduce ($holders;
+     . as $reach | $reach + ($edges | map(select(.to as $to | $reach | any_c(. == $to)) | .from)) | unique)) as $called
 | $all[] | .file as $file | .doc.permissions as $wp
 | .doc.jobs | to_entries | .[]
 | select(.value.uses | tag == "!!str")
