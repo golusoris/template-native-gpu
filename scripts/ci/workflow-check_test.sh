@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh (15 accepted, 38 refused): a clean workflow, a
-# flaky pull, a called workflow with contents: write and SBOM steps that cannot reach a release
+# Planted cases for scripts/ci/workflow-check.sh (18 accepted, 42 refused): a clean workflow, a
+# flaky pull, a called workflow with contents: write, local callers of it (granting write, silent,
+# calling it with upload disabled, or calling another workflow) and SBOM steps that cannot reach a release
 # (disabled on root or publish-sbom in with, with false overriding env true, upper-case key, padded
 # false, pull_request, branch-only or aliased branch push with release-ref-prefix: refs/tags/ pinned
 # in with, and with prefix pin overriding step env or a GITHUB_ENV rewrite) pass; a tag pin, a stale
@@ -10,7 +11,8 @@
 # expression, disagreeing keys, env-only disable on root or publish-sbom, unpinned branch-only push,
 # blank or non-tag release-ref-prefix in with including upper-case key or with bad over env, env-only
 # release-ref-prefix across step, job, workflow, shadowed, lower-case on ubuntu, Windows or matrix
-# runs-on, or GITHUB_ENV rewrite, an env that is no map, read-only workflow_call) fail.
+# runs-on, or GITHUB_ENV rewrite, an env that is no map, read-only workflow_call, tag push with the
+# prefix pinned, a local caller whose job, workflow or read-all permissions lack contents: write) fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -146,7 +148,7 @@ ${3:-}
 YAML
 }
 
-# plant_called CASE [PERMISSIONS]: a workflow_call workflow with no top-level permissions block.
+# plant_called CASE [PERMISSIONS] [WITH]: a workflow_call workflow with no top-level permissions block.
 plant_called() {
   mkdir -p "$WORK/$1/.github/workflows"
   cat >"$WORK/$1/.github/workflows/planted.yml" <<YAML
@@ -161,6 +163,37 @@ ${2:-}
       - uses: $SBOM # v0.24.0
         with:
           path: .
+${3:-}
+YAML
+}
+
+# plant_caller CASE [JOB_PERMISSIONS] [WORKFLOW_PERMISSIONS] [CALLED_WITH] [TARGET]: a release
+# workflow whose job calls TARGET (default: the planted SBOM workflow, which holds contents: write).
+plant_caller() {
+  plant_called "$1" $'    permissions:\n      contents: write' "${4:-}"
+  cat >"$WORK/$1/.github/workflows/caller.yml" <<YAML
+name: caller
+on:
+$RELEASE
+${3:-}
+jobs:
+  call:
+${2:-}
+    uses: ./.github/workflows/${5:-planted.yml}
+YAML
+  cat >"$WORK/$1/.github/workflows/other.yml" <<YAML
+name: other
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  other:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: $CHECKOUT # v7.0.1
+        with:
+          persist-credentials: false
 YAML
 }
 
@@ -200,10 +233,6 @@ plant_sbom sbom-alias-branch-push $'  pull_request: &main\n    branches: [main]\
 bash "$HERE/workflow-check.sh" "$WORK/sbom-alias-branch-push" >/dev/null
 echo "ok   sbom-alias-branch-push: accepted"
 
-plant_sbom sbom-prefix-default $'  push:\n    branches: [main]' "          release-ref-prefix: refs/tags/"
-bash "$HERE/workflow-check.sh" "$WORK/sbom-prefix-default" >/dev/null
-echo "ok   sbom-prefix-default: accepted"
-
 plant_sbom sbom-prefix-with-over-env $'  push:\n    branches: [main]' $'          release-ref-prefix: refs/tags/\n        env:\n          INPUT_RELEASE-REF-PREFIX: refs/heads/'
 bash "$HERE/workflow-check.sh" "$WORK/sbom-prefix-with-over-env" >/dev/null
 echo "ok   sbom-prefix-with-over-env: accepted"
@@ -218,6 +247,22 @@ echo "ok   sbom-github-env-with-pin: accepted"
 plant_called sbom-called-write $'    permissions:\n      contents: write'
 bash "$HERE/workflow-check.sh" "$WORK/sbom-called-write" >/dev/null
 echo "ok   sbom-called-write: accepted"
+
+plant_caller sbom-caller-job-write $'    permissions:\n      contents: write'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-caller-job-write" >/dev/null
+echo "ok   sbom-caller-job-write: accepted"
+
+plant_caller sbom-caller-default
+bash "$HERE/workflow-check.sh" "$WORK/sbom-caller-default" >/dev/null
+echo "ok   sbom-caller-default: accepted"
+
+plant_caller sbom-caller-off $'    permissions:\n      contents: read' "" "          upload-release-assets: false"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-caller-off" >/dev/null
+echo "ok   sbom-caller-off: accepted"
+
+plant_caller sbom-caller-other $'    permissions:\n      contents: read' "" "" other.yml
+bash "$HERE/workflow-check.sh" "$WORK/sbom-caller-other" >/dev/null
+echo "ok   sbom-caller-other: accepted"
 
 plant_sbom sbom-read-upload "$RELEASE"
 expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
@@ -317,6 +362,18 @@ expect_refusal sbom-env-opaque "job read-only: sbom-release-upload"
 plant_called sbom-called-read
 expect_refusal sbom-called-read "job read-only: sbom-release-upload"
 
+plant_sbom sbom-prefix-tag-push $'  push:\n    tags: ["v*"]' "          release-ref-prefix: refs/tags/"
+expect_refusal sbom-prefix-tag-push "job read-only: sbom-release-upload"
+
+plant_caller sbom-caller-job-read $'    permissions:\n      contents: read'
+expect_refusal sbom-caller-job-read "job call: sbom-release-upload: caller grants no contents: write to planted.yml"
+
+plant_caller sbom-caller-wf-read "" $'permissions:\n  contents: read'
+expect_refusal sbom-caller-wf-read "job call: sbom-release-upload: caller grants no contents: write to planted.yml"
+
+plant_caller sbom-caller-read-all $'    permissions: read-all'
+expect_refusal sbom-caller-read-all "job call: sbom-release-upload: caller grants no contents: write to planted.yml"
+
 mkdir -p "$WORK/old-yq-bin"
 cat >"$WORK/old-yq-bin/yq" <<'BASH'
 #!/usr/bin/env bash
@@ -336,4 +393,4 @@ expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 15 accepted, 38 refused"
+echo "workflow check: 18 accepted, 42 refused"

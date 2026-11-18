@@ -61,14 +61,17 @@ if ! YQ_VERSION="$(yq --version 2>/dev/null)" || [[ "$YQ_VERSION" != *mikefarah*
   echo "error: mikefarah yq is required" >&2
   exit 1
 fi
-if ! yq -n 'explode(.) | [1] | (any_c(. == 1) and all_c((to_string | trim | downcase) == "1"))' >/dev/null 2>&1; then
+if ! yq ea -n 'explode(.) | [1] | (any_c(. == 1) and all_c((to_string | trim | downcase | sub("^x"; "")) == "1"))' >/dev/null 2>&1; then
   echo "error: yq ${YQ_VERSION##* } lacks operators the SBOM rule needs; install a current mikefarah yq (tested with v4.52.4)" >&2
   exit 1
 fi
 RELEASE_UPLOADS="$(cd "$ROOT" && yq -r --from-file "$REPO_ROOT/scripts/ci/sbom-release-upload.yq" "${FILES[@]}")"
+# A called workflow cannot raise its caller's token: the second rule reads every file at once.
+CALLER_GRANTS="$(cd "$ROOT" && yq ea -r --from-file "$REPO_ROOT/scripts/ci/sbom-caller-grant.yq" "${FILES[@]}")"
+RELEASE_UPLOADS="${RELEASE_UPLOADS}${RELEASE_UPLOADS:+${CALLER_GRANTS:+$'\n'}}${CALLER_GRANTS}"
 if [ -n "$RELEASE_UPLOADS" ]; then
   printf '%s\n' "$RELEASE_UPLOADS" >&2
-  echo "error: set upload-release-assets: false, or grant that job contents: write" >&2
+  echo "error: set upload-release-assets: false, or grant that job (and its local caller) contents: write" >&2
   exit 1
 fi
 echo "release uploads: no anchore/sbom-action step lacks contents: write for its release upload"

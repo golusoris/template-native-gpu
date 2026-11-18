@@ -1,0 +1,20 @@
+# Lists every job that calls a local workflow_call workflow holding an upload-capable
+# anchore/sbom-action step while its own explicit permissions lack contents: write: a called job
+# cannot raise its caller's token. One level only; external callers must grant contents: write.
+[explode(.) | {"file": filename, "doc": .}] as $all
+| [$all[] | select(.doc.on | ((select(tag == "!!map") | keys) // ([.] | flatten)) | any_c(. == "workflow_call"))
+   | select([.doc.jobs[] | .steps // [] | .[]]
+       | map(select((.uses // "") | downcase | test("^anchore/sbom-action(/publish-sbom)?@")))
+       | map(select(((.with // {}) | to_entries | map(select((.key | downcase) == "upload-release-assets") | .value | to_string | trim | downcase))
+           | (length > 0 and all_c(. == "false")) | not))
+       | length > 0)
+   | .file | sub("^.*/"; "")] as $called
+| $all[] | .file as $file | .doc.permissions as $wp
+| .doc.jobs | to_entries | .[]
+| select(.value.uses | tag == "!!str")
+| (.value.uses | select(test("^\./\.github/workflows/[^/@]+$")) | sub("^\./\.github/workflows/"; "")) as $target
+| select($called | any_c(. == $target))
+| (.value.permissions // $wp) as $p
+| select($p != null)
+| select(($p == "write-all" or ($p | tag) == "!!map" and $p.contents == "write") | not)
+| .key | $file + ": job " + . + ": sbom-release-upload: caller grants no contents: write to " + $target
