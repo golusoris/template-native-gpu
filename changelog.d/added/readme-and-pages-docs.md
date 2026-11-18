@@ -1,0 +1,1 @@
+- Standardise `README.md` with the hero banner (`docs/assets/banner.svg`), static `for-the-badge` header block, and themed architecture Mermaid diagram, and add the digest-pinned MkDocs Material GitHub Pages workflow (`scripts/ci/mkdocs-build.sh`, `.github/workflows/docs.yml`).

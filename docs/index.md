@@ -1,5 +1,7 @@
 # PROJECT
 
+![template-native-gpu banner](assets/banner.svg)
+
 A reusable boilerplate for native (C/C++) + GPU + FFmpeg-filter projects.
 
 - **Minimal seed** — `libproject` (an append-only side-data interop ABI + a hello

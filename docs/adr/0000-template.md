@@ -4,7 +4,7 @@
 
 # ADR-NNNN: <short, declarative title>
 
-- **Status**: Proposed | Accepted | Deprecated | Superseded by [ADR-MMMM](MMMM-title.md)
+- **Status**: Proposed | Accepted | Deprecated | Superseded by `[ADR-MMMM](MMMM-title.md)`
 - **Date**: YYYY-MM-DD
 - **Deciders**: <names / handles>
 - **Tags**: <comma-separated — e.g. `build`, `gpu`, `cuda`, `abi`, `ci`, `security`, `license`>

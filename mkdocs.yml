@@ -1,5 +1,6 @@
 site_name: PROJECT
 site_description: Native (C/C++) + GPU + FFmpeg-filter project
+site_url: https://golusoris.github.io/template-native-gpu/
 # TEMPLATE: set your repo URL.
 repo_url: https://github.com/your-org/myproject
 edit_uri: edit/main/docs/
