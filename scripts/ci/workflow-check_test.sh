@@ -194,7 +194,7 @@ expect_refusal sbom-alias-tag-push "job read-only: sbom-release-upload"
 plant_sbom sbom-publish-read "$RELEASE" "          upload-release-assets: false" "$SBOM_PUBLISH"
 expect_refusal sbom-publish-read "job read-only: sbom-release-upload"
 
-plant_sbom sbom-expression "$RELEASE" '          upload-release-assets: ${{ inputs.x }}'
+plant_sbom sbom-expression "$RELEASE" "          upload-release-assets: \${{ inputs.x }}"
 expect_refusal sbom-expression "job read-only: sbom-release-upload"
 
 plant_sbom sbom-prefix-heads $'  push:\n    branches: [main]' "          release-ref-prefix: refs/heads/"
