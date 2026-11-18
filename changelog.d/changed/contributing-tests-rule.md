@@ -1,1 +1,1 @@
-- `CONTRIBUTING.md` now asks every new feature and bug fix to add or extend a test in the meson suite; a bug fix adds a test that fails without it.
+- `CONTRIBUTING.md` now asks every new feature and bug fix to add or extend a test in the meson suite of the build the change lives in (the root build, or the example's own build for an example-scoped change); a bug fix adds a test that fails without it.

@@ -43,8 +43,11 @@ findings locally rather than burning a CI round-trip.
   style via clang-format. Zero clang-tidy / semgrep / gitleaks findings on merge.
   A `//nolint` / suppression needs a justification comment.
 - **Tests come with the change.** New functionality and bug fixes add or extend
-  a test in the meson suite (`meson test -C build`); a bug fix adds a test that
-  fails without it.
+  a test in the meson suite of the build the change lives in: the root build
+  (`meson test -C build`), or the example's own build for a change under
+  `examples/full-gpu-matrix/` (`meson test -C build-gpu`). An example-scoped
+  change needs no extra root-build test. A bug fix adds a test that fails
+  without it.
 - **Interop ABI is append-only.** See `libproject/AGENTS.md` rules R1–R6.
 - **GPU backends** keep their `-ENOSYS` stub in lockstep with the real surface
   and document the cross-backend bit-exactness reasoning.
