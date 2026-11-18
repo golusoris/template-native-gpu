@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh (12 accepted, 21 refused): a clean workflow, a
+# Planted cases for scripts/ci/workflow-check.sh (13 accepted, 28 refused): a clean workflow, a
 # flaky pull, a called workflow with contents: write and SBOM steps that cannot reach a release
 # (disabled on root or publish-sbom, upper-case key, padded false, pull_request, branch-only push,
-# aliased branch push, default release-ref-prefix) pass; a tag pin, a stale or missing version
-# comment, a broken workflow, a dead pull, a missing token, an old yq and SBOM release uploads
-# without contents: write (release, upper-case uses, tag push, aliased tag push, publish-sbom
-# default, padded true, blank, non-false literal, expression, disagreeing keys, non-tag or
-# upper-case release-ref-prefix, read-only workflow_call) fail.
+# aliased branch push, default release-ref-prefix in with or env) pass; a tag pin, a stale or
+# missing version comment, a broken workflow, a dead pull, a missing token, an old yq and SBOM
+# release uploads without contents: write (release, upper-case uses, tag push, aliased tag push,
+# publish-sbom default, padded true, blank, non-false literal, expression, disagreeing keys, env
+# override or env-only disable, non-tag or upper-case release-ref-prefix in with or any env scope,
+# an env that is no map, read-only workflow_call) fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -108,8 +109,8 @@ SBOM=anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
 SBOM_PUBLISH=anchore/sbom-action/publish-sbom@e22c389904149dbc22b58101806040fa8d37a610
 SBOM_DOWNLOAD=anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
 RELEASE=$'  release:\n    types: [published]'
-# plant_sbom CASE TRIGGER [WITH] [USES]: a read-only SBOM job and a contents: write one under the
-# on: block TRIGGER; WITH is one more input line for the read-only step.
+# plant_sbom CASE TRIGGER [WITH] [USES] [JOB]: a read-only SBOM job and a contents: write one under
+# the on: block TRIGGER; WITH is extra step YAML and JOB is extra job YAML for the read-only job.
 plant_sbom() {
   mkdir -p "$WORK/$1/.github/workflows"
   cat >"$WORK/$1/.github/workflows/planted.yml" <<YAML
@@ -121,6 +122,7 @@ permissions:
 jobs:
   read-only:
     runs-on: ubuntu-26.04
+${5:-}
     steps:
       - uses: $SBOM_DOWNLOAD # v0.24.0
       - uses: ${4:-$SBOM} # v0.24.0
@@ -192,6 +194,10 @@ plant_sbom sbom-prefix-default $'  push:\n    branches: [main]' "          relea
 bash "$HERE/workflow-check.sh" "$WORK/sbom-prefix-default" >/dev/null
 echo "ok   sbom-prefix-default: accepted"
 
+plant_sbom sbom-prefix-env-default $'  push:\n    branches: [main]' $'        env:\n          INPUT_RELEASE-REF-PREFIX: refs/tags/'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-prefix-env-default" >/dev/null
+echo "ok   sbom-prefix-env-default: accepted"
+
 plant_called sbom-called-write $'    permissions:\n      contents: write'
 bash "$HERE/workflow-check.sh" "$WORK/sbom-called-write" >/dev/null
 echo "ok   sbom-called-write: accepted"
@@ -205,7 +211,7 @@ expect_refusal sbom-uses-upper "job read-only: sbom-release-upload"
 plant_sbom sbom-tag-push $'  push:\n    tags: ["v*"]'
 expect_refusal sbom-tag-push "job read-only: sbom-release-upload"
 
-plant_sbom sbom-alias-tag-push $'  pull_request: &tags\n    tags: ["v*"]\n  push: *tags'
+plant_sbom sbom-alias-tag-push $'  pull_request:\n    branches: &tags ["v*"]\n  push:\n    tags: *tags'
 expect_refusal sbom-alias-tag-push "job read-only: sbom-release-upload"
 
 plant_sbom sbom-publish-read "$RELEASE" "" "$SBOM_PUBLISH"
@@ -226,11 +232,33 @@ expect_refusal sbom-expression "job read-only: sbom-release-upload"
 plant_sbom sbom-keys-disagree "$RELEASE" $'          upload-release-assets: false\n          UPLOAD-RELEASE-ASSETS: true'
 expect_refusal sbom-keys-disagree "job read-only: sbom-release-upload"
 
+plant_sbom sbom-upload-env-true "$RELEASE" $'          upload-release-assets: false\n        env:\n          INPUT_UPLOAD-RELEASE-ASSETS: true'
+expect_refusal sbom-upload-env-true "job read-only: sbom-release-upload"
+
+plant_sbom sbom-upload-env-only "$RELEASE" $'        env:\n          INPUT_UPLOAD-RELEASE-ASSETS: false'
+expect_refusal sbom-upload-env-only "job read-only: sbom-release-upload"
+
 plant_sbom sbom-prefix-heads $'  push:\n    branches: [main]' "          release-ref-prefix: refs/heads/"
 expect_refusal sbom-prefix-heads "job read-only: sbom-release-upload"
 
 plant_sbom sbom-prefix-key-upper $'  push:\n    branches: [main]' "          RELEASE-REF-PREFIX: refs/heads/"
 expect_refusal sbom-prefix-key-upper "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-env $'  push:\n    branches: [main]' $'        env:\n          INPUT_RELEASE-REF-PREFIX: refs/heads/'
+expect_refusal sbom-prefix-env "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-env-lower $'  push:\n    branches: [main]' $'        env:\n          input_release-ref-prefix: refs/heads/'
+expect_refusal sbom-prefix-env-lower "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-job-env $'  push:\n    branches: [main]' "" "" $'    env:\n      INPUT_RELEASE-REF-PREFIX: refs/heads/'
+expect_refusal sbom-prefix-job-env "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-wf-env $'  push:\n    branches: [main]'
+printf 'env:\n  INPUT_RELEASE-REF-PREFIX: refs/heads/\n' >>"$WORK/sbom-prefix-wf-env/.github/workflows/planted.yml"
+expect_refusal sbom-prefix-wf-env "job read-only: sbom-release-upload"
+
+plant_sbom sbom-env-opaque $'  push:\n    branches: [main]' "        env: \${{ fromJSON(vars.SBOM_ENV) }}"
+expect_refusal sbom-env-opaque "job read-only: sbom-release-upload"
 
 plant_called sbom-called-read
 expect_refusal sbom-called-read "job read-only: sbom-release-upload"
@@ -254,4 +282,4 @@ expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 12 accepted, 21 refused"
+echo "workflow check: 13 accepted, 28 refused"

@@ -71,7 +71,7 @@ if [ -n "$RELEASE_UPLOADS" ]; then
   echo "error: set upload-release-assets: false, or grant that job contents: write" >&2
   exit 1
 fi
-echo "release uploads: every anchore/sbom-action step has the scope its release upload needs"
+echo "release uploads: no anchore/sbom-action step lacks contents: write for its release upload"
 
 pull_image "$ACTIONLINT_IMAGE"
 pull_image "$ZIZMOR_IMAGE"
