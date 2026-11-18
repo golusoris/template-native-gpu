@@ -1,18 +1,12 @@
-# Lists every anchore/sbom-action or publish-sbom step that would attach release assets
-# (upload-release-assets not disabled) in a job whose token lacks contents: write.
-# The action attaches assets only on a release event or a push to a tag; a push filtered to
-# branches alone never sees a tag, unless the step moves release-ref-prefix. A pull_request-only
-# workflow is skipped.
-# A workflow_call workflow cannot see its caller, so the called job must state permissions: contents: write.
-# Runner input names and action refs are case-insensitive and core.getInput trims whitespace, so
-# the rule normalises once and allow-lists only upload-release-assets == false and default release-ref-prefix.
-# The runner resolves each input from step with, then the action manifest default (upload-release-assets
-# defaults to true on the root action only), then the first matching INPUT_<NAME> across step, job, and
-# workflow env (exact key on ubuntu-* runners, case-insensitive elsewhere; a non-map env before a match is unsafe).
+# Lists every anchore/sbom-action or publish-sbom step that can attach release assets in a job
+# whose token lacks contents: write (a workflow_call job cannot see its caller and must grant it;
+# pull_request-only workflows are skipped). Action defaults and INPUT_* env are not trusted because
+# env scopes, runner OS key casing, GITHUB_ENV writes, and earlier steps can move them at run time;
+# only step with is static. Runner input names and action refs are case-insensitive and
+# core.getInput trims whitespace, so a step without contents: write is exempt only when with pins
+# upload-release-assets to false, or on a branch-only push with release-ref-prefix pinned to refs/tags/.
 explode(.)
 | (.permissions // {}) as $wp
-| [{"key": "INPUT_UPLOAD-RELEASE-ASSETS", "value": "?"}, {"key": "INPUT_RELEASE-REF-PREFIX", "value": "?"}] as $opaque
-| (((.env // {}) | select(tag == "!!map") | to_entries) // $opaque) as $we
 | ((.on | select(tag == "!!map") | keys) // (.on | [.] | flatten)) as $events
 | ((.on | select(tag == "!!map") | .push) // {}) as $push
 | ($events | any_c(. == "release" or . == "workflow_call")) as $release
@@ -22,19 +16,12 @@ explode(.)
 | .jobs | to_entries | .[] | .key as $job
 | (.value.permissions // $wp) as $p
 | select(($p == "write-all" or ($p | tag) == "!!map" and $p.contents == "write") | not)
-| (((.value."runs-on" | select(tag == "!!str")) // "") | test("^ubuntu-")) as $ubuntu
-| (((.value.env // {}) | select(tag == "!!map") | to_entries) // $opaque) as $je
 | .value.steps // [] | .[]
 | ((.uses // "") | downcase) as $uses
 | select($uses | test("^anchore/sbom-action(/publish-sbom)?@"))
 | ((.with // {}) | to_entries | map({"key": (.key | downcase), "value": (.value | to_string | trim)})) as $with
-| (((.env // {}) | select(tag == "!!map") | to_entries) // $opaque) as $se
-| ([$se, $je, $we] | map(map({"key": ((.key | select($ubuntu)) // (.key | upcase)), "value": (.value | to_string | trim)}))) as $envs
-| (["true"] | map(select($uses | test("^anchore/sbom-action@")))) as $default_uploads
-| ([($with | map(select(.key == "upload-release-assets") | .value | downcase)), $default_uploads] + ($envs | map(map(select(.key == "INPUT_UPLOAD-RELEASE-ASSETS") | .value | downcase)))) as $upload_scopes
-| (($upload_scopes | map(select(length > 0)) | .[0]) // ["true"]) as $uploads
-| select(($uploads | all_c(. == "false")) | not)
-| ([($with | map(select(.key == "release-ref-prefix") | .value))] + ($envs | map(map(select(.key == "INPUT_RELEASE-REF-PREFIX") | .value)))) as $prefix_scopes
-| (($prefix_scopes | map(select(length > 0)) | .[0]) // []) as $prefixes
-| select($release or ($branch_only | not) or (($prefixes | all_c(. == "" or . == "refs/tags/")) | not))
-| filename + ": job " + $job + ": sbom-release-upload: release asset upload needs contents: write"
+| ($with | map(select(.key == "upload-release-assets") | .value | downcase)) as $uploads
+| select(($uploads | (length > 0 and all_c(. == "false"))) | not)
+| ($with | map(select(.key == "release-ref-prefix") | .value)) as $prefixes
+| select($release or ($branch_only | not) or (($prefixes | (length > 0 and all_c(. == "refs/tags/"))) | not))
+| filename + ": job " + $job + ": sbom-release-upload: release asset upload needs contents: write, or with upload-release-assets: false, or on a branch-only trigger with release-ref-prefix: refs/tags/"
