@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Planted cases for scripts/ci/workflow-check.sh: a clean workflow, a flaky pull and an SBOM step
-# that cannot reach a release pass; a tag pin, a stale or missing version comment, a broken
-# workflow, a dead pull, a missing token and an SBOM release upload without contents: write fail.
+# Planted cases for scripts/ci/workflow-check.sh: a clean workflow, a flaky pull, a called
+# workflow with contents: write and SBOM steps that cannot reach a release (disabled, branch-only
+# push, aliased branch push, default release-ref-prefix) pass; a tag pin, a stale or missing
+# version comment, a broken workflow, a dead pull, a missing token, an old yq and SBOM release
+# uploads without contents: write (release, tag push, aliased tag push, publish-sbom, expression,
+# non-tag release-ref-prefix, read-only workflow_call) fail.
 #   usage: scripts/ci/workflow-check_test.sh
 set -euo pipefail
 
@@ -100,8 +103,10 @@ plant broken .github "$CHECKOUT # v7.0.1" runs-in
 expect_refusal broken "syntax-check"
 
 SBOM=anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+SBOM_PUBLISH=anchore/sbom-action/publish-sbom@e22c389904149dbc22b58101806040fa8d37a610
+SBOM_DOWNLOAD=anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
 RELEASE=$'  release:\n    types: [published]'
-# plant_sbom CASE TRIGGER [WITH]: a read-only SBOM job and a contents: write one under the
+# plant_sbom CASE TRIGGER [WITH] [USES]: a read-only SBOM job and a contents: write one under the
 # on: block TRIGGER; WITH is one more input line for the read-only step.
 plant_sbom() {
   mkdir -p "$WORK/$1/.github/workflows"
@@ -115,7 +120,8 @@ jobs:
   read-only:
     runs-on: ubuntu-26.04
     steps:
-      - uses: $SBOM # v0.24.0
+      - uses: $SBOM_DOWNLOAD # v0.24.0
+      - uses: ${4:-$SBOM} # v0.24.0
         with:
           path: .
 ${3:-}
@@ -130,9 +136,31 @@ ${3:-}
 YAML
 }
 
+# plant_called CASE [PERMISSIONS]: a workflow_call workflow with no top-level permissions block.
+plant_called() {
+  mkdir -p "$WORK/$1/.github/workflows"
+  cat >"$WORK/$1/.github/workflows/planted.yml" <<YAML
+name: planted
+on:
+  workflow_call:
+jobs:
+  read-only:
+    runs-on: ubuntu-26.04
+${2:-}
+    steps:
+      - uses: $SBOM # v0.24.0
+        with:
+          path: .
+YAML
+}
+
 plant_sbom sbom-scoped "$RELEASE" "          upload-release-assets: false"
 bash "$HERE/workflow-check.sh" "$WORK/sbom-scoped" >/dev/null
 echo "ok   sbom-scoped: accepted"
+
+plant_sbom sbom-false-capital "$RELEASE" "          upload-release-assets: 'False'"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-false-capital" >/dev/null
+echo "ok   sbom-false-capital: accepted"
 
 plant_sbom sbom-pull-request "  pull_request:"
 bash "$HERE/workflow-check.sh" "$WORK/sbom-pull-request" >/dev/null
@@ -142,15 +170,56 @@ plant_sbom sbom-branch-push $'  push:\n    branches: [main]'
 bash "$HERE/workflow-check.sh" "$WORK/sbom-branch-push" >/dev/null
 echo "ok   sbom-branch-push: accepted"
 
+plant_sbom sbom-alias-branch-push $'  pull_request: &main\n    branches: [main]\n  push: *main'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-alias-branch-push" >/dev/null
+echo "ok   sbom-alias-branch-push: accepted"
+
+plant_sbom sbom-prefix-default $'  push:\n    branches: [main]' "          release-ref-prefix: refs/tags/"
+bash "$HERE/workflow-check.sh" "$WORK/sbom-prefix-default" >/dev/null
+echo "ok   sbom-prefix-default: accepted"
+
+plant_called sbom-called-write $'    permissions:\n      contents: write'
+bash "$HERE/workflow-check.sh" "$WORK/sbom-called-write" >/dev/null
+echo "ok   sbom-called-write: accepted"
+
 plant_sbom sbom-read-upload "$RELEASE"
 expect_refusal sbom-read-upload "job read-only: sbom-release-upload"
 
 plant_sbom sbom-tag-push $'  push:\n    tags: ["v*"]'
 expect_refusal sbom-tag-push "job read-only: sbom-release-upload"
 
+plant_sbom sbom-alias-tag-push $'  pull_request: &tags\n    tags: ["v*"]\n  push: *tags'
+expect_refusal sbom-alias-tag-push "job read-only: sbom-release-upload"
+
+plant_sbom sbom-publish-read "$RELEASE" "          upload-release-assets: false" "$SBOM_PUBLISH"
+expect_refusal sbom-publish-read "job read-only: sbom-release-upload"
+
+plant_sbom sbom-expression "$RELEASE" '          upload-release-assets: ${{ inputs.x }}'
+expect_refusal sbom-expression "job read-only: sbom-release-upload"
+
+plant_sbom sbom-prefix-heads $'  push:\n    branches: [main]' "          release-ref-prefix: refs/heads/"
+expect_refusal sbom-prefix-heads "job read-only: sbom-release-upload"
+
+plant_called sbom-called-read
+expect_refusal sbom-called-read "job read-only: sbom-release-upload"
+
+mkdir -p "$WORK/old-yq-bin"
+cat >"$WORK/old-yq-bin/yq" <<'BASH'
+#!/usr/bin/env bash
+if [ "${1:-}" = --version ]; then
+  echo "yq (https://github.com/mikefarah/yq/) version v4.18.1"
+  exit 0
+fi
+echo "Error: 1:1: lexer: invalid input text" >&2
+exit 1
+BASH
+chmod +x "$WORK/old-yq-bin/yq"
+plant old-yq .github "$CHECKOUT # v7.0.1"
+expect_refusal old-yq "lacks operators the SBOM rule needs" env PATH="$WORK/old-yq-bin:$PATH"
+
 expect_refusal clean "is required" env -u GH_TOKEN -u GITHUB_TOKEN
 
 mkdir -p "$WORK/empty"
 expect_refusal empty "no workflow file"
 
-echo "workflow check: 5 accepted, 9 refused"
+echo "workflow check: 9 accepted, 15 refused"

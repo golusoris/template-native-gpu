@@ -57,8 +57,12 @@ fi
 
 # anchore/sbom-action attaches its SBOM to the release on a release event or a tag push unless
 # upload-release-assets is false; without contents: write that step fails only at release time.
-if ! yq --version 2>/dev/null | grep -q mikefarah; then
+if ! YQ_VERSION="$(yq --version 2>/dev/null)" || [[ "$YQ_VERSION" != *mikefarah* ]]; then
   echo "error: mikefarah yq is required" >&2
+  exit 1
+fi
+if ! yq -n 'explode(.) | [1] | any_c((to_string | downcase) == "1")' >/dev/null 2>&1; then
+  echo "error: yq ${YQ_VERSION##* } lacks operators the SBOM rule needs; install a current mikefarah yq (tested with v4.52.4)" >&2
   exit 1
 fi
 RELEASE_UPLOADS="$(cd "$ROOT" && yq -r --from-file "$REPO_ROOT/scripts/ci/sbom-release-upload.yq" "${FILES[@]}")"

@@ -1,9 +1,11 @@
-# Lists every anchore/sbom-action step that would attach release assets
-# (upload-release-assets not false) in a job whose token lacks contents: write.
-# The action attaches assets only on a release event or a push to a tag (a called workflow
-# runs under its caller's event); a push filtered to branches alone never sees a tag, unless
-# the step moves release-ref-prefix. A pull_request-only workflow is skipped.
-(.permissions // {}) as $wp
+# Lists every anchore/sbom-action or publish-sbom step that would attach release assets
+# (upload-release-assets not disabled) in a job whose token lacks contents: write.
+# The action attaches assets only on a release event or a push to a tag; a push filtered to
+# branches alone never sees a tag, unless the step moves release-ref-prefix. A pull_request-only
+# workflow is skipped.
+# A workflow_call workflow cannot see its caller, so the called job must state permissions: contents: write.
+explode(.)
+| (.permissions // {}) as $wp
 | ((.on | select(tag == "!!map") | keys) // (.on | [.] | flatten)) as $events
 | ((.on | select(tag == "!!map") | .push) // {}) as $push
 | ($events | any_c(. == "release" or . == "workflow_call")) as $release
@@ -14,7 +16,11 @@
 | (.value.permissions // $wp) as $p
 | select(($p == "write-all" or ($p | tag) == "!!map" and $p.contents == "write") | not)
 | .value.steps // [] | .[]
-| select((.uses // "") | test("^anchore/sbom-action@"))
-| select((.with."upload-release-assets" | to_string) != "false")
-| select($release or ($branch_only | not) or .with."release-ref-prefix" != null)
+| (.uses // "") as $uses
+| select($uses | test("^anchore/sbom-action(/publish-sbom)?@"))
+| ($uses | test("^anchore/sbom-action/publish-sbom@")) as $publish
+| (.with."upload-release-assets") as $upload
+| select($publish or $upload == null or ($upload | to_string | downcase | (. == "" or . == "true" or test("\\$\\{\\{"))))
+| (.with."release-ref-prefix") as $prefix
+| select($release or ($branch_only | not) or ($prefix != null and $prefix != "" and $prefix != "refs/tags/"))
 | filename + ": job " + $job + ": sbom-release-upload: release asset upload needs contents: write"
