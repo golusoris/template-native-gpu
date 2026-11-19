@@ -13,8 +13,10 @@
 **Please do not open a public issue for security problems.**
 
 Use GitHub private vulnerability reporting: open this repository's
-**Security** tab and choose **Report a vulnerability** (the form lives at
-`<repository URL>/security/advisories/new`). Only maintainers see the report.
+**Security and quality** tab and choose **Report a vulnerability** (the form
+lives at `<repository URL>/security/advisories/new`). The report stays
+private: only you, the repository admins and security managers, and the
+collaborators they add to the advisory can see it.
 
 Please include:
 
