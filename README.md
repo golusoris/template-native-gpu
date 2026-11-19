@@ -56,6 +56,14 @@ Also regenerate the side-data UUID (`uuidgen`) in `libproject/src/interop.c` +
 `interop.h`, and update `your-org` / `myproject` / funding / email placeholders
 in `.github/`, `SECURITY.md`, `mkdocs.yml`, `deploy/helm/`.
 
+Then enable private vulnerability reporting in the new repository's security
+settings. Repository settings are not copied with the template, and
+`SECURITY.md` names that form as the only reporting channel.
+GitHub offers private vulnerability reporting on public repositories only: in a
+private repository, replace the reporting channel in `SECURITY.md` and the
+`Security disclosure` link in `.github/ISSUE_TEMPLATE/config.yml` with a
+contact you control.
+
 ## What you get (the cross-cutting layer)
 
 - **Build**: meson + ninja, warning-clean baseline, pkg-config export.
