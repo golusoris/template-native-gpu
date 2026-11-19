@@ -2,7 +2,7 @@
 # Lint every workflow file and refuse an action that is not pinned to a commit
 # or whose version comment does not name that commit.
 #   usage: scripts/ci/workflow-check.sh [ROOT]   (default: this repository)
-#   needs: docker, jq, and GH_TOKEN or GITHUB_TOKEN (read access is enough)
+#   needs: docker, jq, mikefarah yq, and GH_TOKEN or GITHUB_TOKEN (read access is enough)
 # Interim gate: it calls actionlint and zizmor directly until the shared
 # workflow check can be called from a public repository.
 # Retry explicit pulls because registries can transiently miss pinned image layers.
@@ -54,6 +54,28 @@ if [ ${#FILES[@]} -eq 0 ]; then
   echo "error: no workflow file under $ROOT" >&2
   exit 1
 fi
+
+# anchore/sbom-action attaches its SBOM to the release on a release event or a tag push unless
+# upload-release-assets is false; without contents: write that step fails only at release time.
+if ! YQ_VERSION="$(yq --version 2>/dev/null)" || [[ "$YQ_VERSION" != *mikefarah* ]]; then
+  echo "error: mikefarah yq is required" >&2
+  exit 1
+fi
+# shellcheck disable=SC2016 # $i is a yq variable, not a shell expansion
+if ! yq ea -n 'explode(.) | ([0] | .[] as $i ireduce ([1]; . + [1] | unique)) | (any_c(. == 1) and all_c((to_string | trim | downcase | sub("^x"; "")) == "1"))' >/dev/null 2>&1; then
+  echo "error: yq ${YQ_VERSION##* } lacks operators the SBOM rule needs; install a current mikefarah yq (tested with v4.52.4)" >&2
+  exit 1
+fi
+RELEASE_UPLOADS="$(cd "$ROOT" && yq -r --from-file "$REPO_ROOT/scripts/ci/sbom-release-upload.yq" "${FILES[@]}")"
+# A called workflow cannot raise its caller's token: the second rule reads every file at once.
+CALLER_GRANTS="$(cd "$ROOT" && yq ea -r --from-file "$REPO_ROOT/scripts/ci/sbom-caller-grant.yq" "${FILES[@]}")"
+RELEASE_UPLOADS="${RELEASE_UPLOADS}${RELEASE_UPLOADS:+${CALLER_GRANTS:+$'\n'}}${CALLER_GRANTS}"
+if [ -n "$RELEASE_UPLOADS" ]; then
+  printf '%s\n' "$RELEASE_UPLOADS" >&2
+  echo "error: set upload-release-assets: false, or grant that job (and its local caller) contents: write" >&2
+  exit 1
+fi
+echo "release uploads: no anchore/sbom-action step lacks contents: write for its release upload"
 
 pull_image "$ACTIONLINT_IMAGE"
 pull_image "$ZIZMOR_IMAGE"
