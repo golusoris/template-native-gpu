@@ -1,0 +1,1 @@
+- The `supply-chain.yml` SBOM job no longer fails on a published release: its read-only token cannot attach release assets, so both SBOMs ship as the `sbom` workflow artifact, and `scripts/ci/workflow-check.sh` refuses an `anchore/sbom-action` step that would attach them without `contents: write`.
